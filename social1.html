@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Advent of Europeans | Cinematic Edition</title>
+  
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  
+  <!-- Google Fonts: Outfit & Playfair Display -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;900&family=Playfair+Display:ital@0;1&display=swap" rel="stylesheet">
+
+  <style>
+    /* =========================================================
+       CINEMATIC DESIGN TOKENS
+       ========================================================= */
+    :root {
+      --bg-dark: #0f172a;
+      --bg-glass: rgba(15, 23, 42, 0.65);
+      --bg-glass-heavy: rgba(15, 23, 42, 0.85);
+      --border-glass: rgba(255, 255, 255, 0.1);
+      
+      --accent-cyan: #06b6d4;
+      --accent-gold: #fbbf24;
+      --accent-brit: #ef4444; /* British Red */
+      --accent-port: #10b981; /* Portuguese Green */
+      --accent-fren: #3b82f6; /* French Blue */
+      --accent-dutch: #f97316; /* Dutch Orange */
+      
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      
+      --radius-xl: 24px;
+      --radius-pill: 99px;
+      
+      --font-ui: 'Outfit', sans-serif;
+      --font-doc: 'Playfair Display', serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+    
+    body {
+      font-family: var(--font-ui);
+      color: var(--text-main);
+      background: var(--bg-dark);
+      overflow: hidden;
+      touch-action: none; /* Prevents pull-to-refresh on mobile */
+    }
+
+    /* =========================================================
+       MAP & CANVAS
+       ========================================================= */
+    .map-container {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      z-index: 1;
+    }
+    #leaflet-map { width: 100%; height: 100%; background: #000; }
+    #route-canvas {
+      position: absolute; top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 2; pointer-events: none;
+    }
+
+    /* Leaflet Overrides */
+    .leaflet-control-zoom { display: none; } /* Hide zoom on mobile */
+    .pulse-marker {
+      background: var(--bg-dark);
+      border: 2px solid var(--accent-cyan);
+      border-radius: 50%;
+      box-shadow: 0 0 15px var(--accent-cyan), inset 0 0 10px var(--accent-cyan);
+      transition: all 0.3s ease;
+    }
+    .pulse-marker.hub {
+      border-color: var(--accent-gold);
+      box-shadow: 0 0 20px var(--accent-gold), inset 0 0 10px var(--accent-gold);
+    }
+
+    /* =========================================================
+       GLASSMORPHISM UI
+       ========================================================= */
+    .glass-panel {
+      background: var(--bg-glass);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-glass);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Top Header */
+    .header {
+      position: absolute;
+      top: env(safe-area-inset-top, 16px);
+      left: 16px; right: 16px;
+      padding: 16px 20px;
+      border-radius: var(--radius-pill);
+      z-index: 10;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .header h1 { font-size: 18px; font-weight: 700; letter-spacing: 0.5px; }
+    .header-badge {
+      background: rgba(6, 182, 212, 0.2);
+      color: var(--accent-cyan);
+      padding: 6px 12px; border-radius: var(--radius-pill);
+      font-size: 12px; font-weight: 700; text-transform: uppercase;
+      border: 1px solid rgba(6, 182, 212, 0.4);
+    }
+
+    /* Bottom Dashboard (Timeline & Meter) */
+    .bottom-dashboard {
+      position: absolute;
+      bottom: env(safe-area-inset-bottom, 16px);
+      left: 16px; right: 16px;
+      border-radius: var(--radius-xl);
+      padding: 20px;
+      z-index: 10;
+      display: flex; flex-direction: column; gap: 20px;
+    }
+
+    .timeline-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 8px;}
+    .era-title { font-size: 20px; font-weight: 900; color: var(--accent-gold); text-shadow: 0 0 10px rgba(251, 191, 36, 0.5); }
+    
+    /* Scrubber */
+    input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
+    input[type=range]:focus { outline: none; }
+    input[type=range]::-webkit-slider-runnable-track {
+      width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: var(--radius-pill);
+    }
+    input[type=range]::-webkit-slider-thumb {
+      height: 28px; width: 28px; border-radius: 50%;
+      background: var(--bg-dark); border: 3px solid var(--accent-cyan);
+      cursor: pointer; -webkit-appearance: none; margin-top: -11px;
+      box-shadow: 0 0 15px var(--accent-cyan);
+      transition: transform 0.1s;
+    }
+    input[type=range]::-webkit-slider-thumb:active { transform: scale(1.2); }
+    .timeline-labels { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); margin-top: 8px; font-weight: 500;}
+
+    /* Influence Meter */
+    .meter-section { display: flex; flex-direction: column; gap: 12px; }
+    .meter-header { display: flex; justify-content: space-between; align-items: center; }
+    .meter-header h3 { font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted);}
+    
+    .commodity-tabs { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; }
+    .commodity-tabs::-webkit-scrollbar { display: none; }
+    .com-tab {
+      background: rgba(255,255,255,0.05); border: 1px solid var(--border-glass);
+      color: var(--text-muted); padding: 6px 14px; border-radius: var(--radius-pill);
+      font-size: 12px; font-weight: 700; white-space: nowrap; transition: 0.3s;
+    }
+    .com-tab.active { background: var(--accent-cyan); color: #000; box-shadow: 0 0 10px var(--accent-cyan); border-color: var(--accent-cyan); }
+
+    .influence-bar { width: 100%; height: 8px; display: flex; border-radius: var(--radius-pill); overflow: hidden; background: #000; box-shadow: inset 0 0 5px rgba(0,0,0,0.8); }
+    .segment { height: 100%; transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+    .bg-brit { background: var(--accent-brit); box-shadow: 0 0 10px var(--accent-brit); }
+    .bg-port { background: var(--accent-port); box-shadow: 0 0 10px var(--accent-port); }
+    .bg-fren { background: var(--accent-fren); box-shadow: 0 0 10px var(--accent-fren); }
+    .bg-dutch { background: var(--accent-dutch); box-shadow: 0 0 10px var(--accent-dutch); }
+
+    /* SEBA Exam Hint FAB */
+    .exam-fab {
+      position: absolute;
+      right: 16px; bottom: calc(env(safe-area-inset-bottom, 16px) + 220px);
+      width: 48px; height: 48px; border-radius: 50%;
+      background: var(--accent-gold); color: #000;
+      display: flex; justify-content: center; align-items: center;
+      box-shadow: 0 0 20px rgba(251, 191, 36, 0.4);
+      z-index: 10; font-size: 24px; cursor: pointer; transition: 0.3s;
+    }
+    .exam-modal {
+      position: absolute;
+      right: 16px; bottom: calc(env(safe-area-inset-bottom, 16px) + 280px);
+      width: calc(100vw - 32px); max-width: 340px;
+      padding: 20px; border-radius: var(--radius-xl);
+      z-index: 10; opacity: 0; pointer-events: none;
+      transform: translateY(10px); transition: 0.3s;
+    }
+    .exam-modal.active { opacity: 1; pointer-events: auto; transform: translateY(0); }
+    .exam-modal h4 { color: var(--accent-gold); font-size: 14px; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;}
+    .exam-modal p { font-size: 14px; line-height: 1.5; color: var(--text-main); margin-bottom: 12px; }
+    .exam-modal .term { background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; border-left: 3px solid var(--accent-cyan); font-size: 13px; }
+    .exam-modal .term b { color: var(--accent-cyan); }
+
+    /* Bottom Sheet Details (Mobile optimized) */
+    .bottom-sheet {
+      position: absolute;
+      bottom: 0; left: 0; width: 100%;
+      background: var(--bg-glass-heavy); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      border-top: 1px solid var(--border-glass);
+      border-radius: 32px 32px 0 0;
+      padding: 24px; z-index: 1000;
+      transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex; flex-direction: column; gap: 20px;
+      max-height: 85vh; overflow-y: auto;
+    }
+    .bottom-sheet.active { transform: translateY(0); }
+    
+    .sheet-handle { width: 40px; height: 4px; background: rgba(255,255,255,0.2); border-radius: 4px; margin: 0 auto -10px auto; }
+    .sheet-header { display: flex; justify-content: space-between; align-items: center; }
+    .sheet-header h2 { font-size: 28px; font-weight: 900; }
+    .close-btn { background: rgba(255,255,255,0.1); border: none; width: 36px; height: 36px; border-radius: 50%; color: #fff; font-size: 20px; }
+
+    .img-placeholder { width: 100%; height: 180px; background: #000; border-radius: 16px; object-fit: cover; border: 1px solid var(--border-glass); }
+    
+    .tags { display: flex; gap: 8px; flex-wrap: wrap; }
+    .tag { padding: 4px 12px; border-radius: var(--radius-pill); font-size: 12px; font-weight: 700; text-transform: uppercase; border: 1px solid var(--border-glass); background: rgba(255,255,255,0.05);}
+    .tag.silk { color: var(--accent-gold); border-color: var(--accent-gold); background: rgba(251, 191, 36, 0.1);}
+    
+    .doc-card { background: rgba(0,0,0,0.4); padding: 20px; border-radius: 16px; border-left: 4px solid var(--accent-gold); }
+    .doc-card h4 { font-size: 12px; color: var(--accent-gold); text-transform: uppercase; margin-bottom: 8px; letter-spacing: 1px;}
+    .doc-card p { font-family: var(--font-doc); font-size: 16px; line-height: 1.6; font-style: italic; color: #cbd5e1; }
+
+    /* Desktop Adjustments */
+    @media (min-width: 768px) {
+      .header h1 { font-size: 24px; }
+      .bottom-dashboard { max-width: 600px; left: 24px; bottom: 24px; }
+      .bottom-sheet { width: 400px; height: calc(100vh - 48px); bottom: 24px; right: 24px; left: auto; border-radius: var(--radius-xl); border: 1px solid var(--border-glass); transform: translateX(120%); }
+      .bottom-sheet.active { transform: translateX(0); }
+      .sheet-handle { display: none; }
+      .exam-fab { bottom: 24px; right: 24px; width: 56px; height: 56px; font-size: 28px;}
+      .exam-modal { right: 24px; bottom: 90px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Map & Canvas -->
+  <div class="map-container">
+    <div id="leaflet-map"></div>
+    <canvas id="route-canvas"></canvas>
+  </div>
+
+  <!-- Header -->
+  <header class="header glass-panel">
+    <h1>Chapter 1: Advent of Europeans</h1>
+    
+  </header>
+
+  <!-- Bottom Dashboard -->
+  <div class="bottom-dashboard glass-panel">
+    
+    <!-- Scrubber -->
+    <div>
+      <div class="timeline-header">
+        <span class="era-title" id="year-display">1600: Charters</span>
+      </div>
+      <input type="range" id="time-slider" min="0" max="4" step="1" value="0">
+      <div class="timeline-labels">
+        <span>1600</span><span>1651</span><span>1757</span><span>1826</span><span>1857</span>
+      </div>
+    </div>
+
+    <!-- Meter -->
+    <div class="meter-section">
+      <div class="meter-header">
+        <h3>Monopoly Influence</h3>
+        <div class="commodity-tabs">
+          <div class="com-tab active" data-com="overall">All Trade</div>
+          <div class="com-tab" data-com="silk">Assam Silk</div>
+        </div>
+      </div>
+      <div class="influence-bar">
+        <div class="segment bg-brit" id="bar-brit" style="width: 10%;"></div>
+        <div class="segment bg-port" id="bar-port" style="width: 70%;"></div>
+        <div class="segment bg-fren" id="bar-fren" style="width: 10%;"></div>
+        <div class="segment bg-dutch" id="bar-dutch" style="width: 10%;"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Exam Hint FAB & Modal -->
+  <div class="exam-fab" onclick="toggleExam()">💡</div>
+  <div class="exam-modal glass-panel" id="exam-modal">
+    <h4>SEBA Exam Target</h4>
+    <p id="exam-desc">The English East India Company received a Royal Charter giving them a trade monopoly.</p>
+    <div class="term">
+      <b id="exam-term">Monopoly:</b> <span id="exam-def">Exclusive control over trade in a region.</span>
+    </div>
+  </div>
+
+  <!-- Detail Bottom Sheet -->
+  <aside id="sheet" class="bottom-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <h2 id="sb-title">Surat</h2>
+      <button class="close-btn" onclick="closeSheet()">×</button>
+    </div>
+    <img src="./assets/images/placeholder.jpg" alt="Trading Post" class="img-placeholder" id="sb-img" />
+    <div class="tags" id="sb-badges"></div>
+    <div class="doc-card">
+      <h4 id="sb-source-title">Charter Excerpt</h4>
+      <p id="sb-source-text">"..."</p>
+    </div>
+  </aside>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+  /* =========================================================
+     DATA & CONFIG
+     ========================================================= */
+  const settlements = {
+    "surat": { name: "Surat", lat: 21.1702, lng: 72.8311, commodities: ["Spices", "Textiles"], sourceTitle: "English Factory (1612)", sourceText: "Emperor Jahangir permitted the English to establish a trading factory following Captain Best's victory.", img: "surat" },
+    "goa": { name: "Goa", lat: 15.2993, lng: 74.1240, commodities: ["Spices", "Horses"], sourceTitle: "Conquest (1510)", sourceText: "Afonso de Albuquerque captured Goa, making it the capital of the Portuguese Estado da Índia.", img: "goa" },
+    "calcutta": { name: "Fort William", lat: 22.5726, lng: 88.3639, commodities: ["Saltpetre", "Indigo"], sourceTitle: "Farman of 1717", sourceText: "Emperor Farrukhsiyar granted the British duty-free trading rights in Bengal.", img: "calcutta" },
+    "hooghly": { name: "Hooghly", lat: 22.9010, lng: 88.3965, commodities: ["Silk", "Opium"], sourceTitle: "Early Bengal (1651)", sourceText: "The British set up their first factory in Bengal, gateway to eastern markets.", img: "hooghly" },
+    "hadirachaki": { name: "Hadirachaki", lat: 26.1700, lng: 90.6200, commodities: ["Assam Silk", "Mustard", "Ivory"], sourceTitle: "Ahom Checkpost", sourceText: "The exclusive customs outpost maintained by the Ahom Kingdom to regulate Bengal-Assam trade.", img: "hadirachaki", isHub: true },
+    "guwahati": { name: "Guwahati", lat: 26.1445, lng: 91.7362, commodities: ["Tea", "Timber"], sourceTitle: "Post-Yandabo Hub (1826)", sourceText: "Rapidly transformed into a vital administrative and commercial hub for the British in Assam.", img: "guwahati", isHub: true },
+    "sadiya": { name: "Sadiya", lat: 27.8333, lng: 95.6667, commodities: ["Tea", "Elephant Tusks"], sourceTitle: "Frontier Trade", sourceText: "Easternmost outpost connecting British trade with local tribes.", img: "sadiya" }
+  };
+
+  const eras = [
+    {
+      title: "1600: Charters", desc: "The English EIC gets a Royal Charter. Portuguese dominance is strong.",
+      term: "Royal Charter", def: "A monarch's document granting privileges.",
+      active: ["goa", "surat"],
+      influence: { overall: { brit: 10, port: 70, fren: 0, dutch: 20 }, silk: { brit: 0, port: 0, fren: 0, dutch: 0 } },
+      routes: [ ["sea", [[10, 60], [15.2993, 74.1240], [21.1702, 72.8311]]] ]
+    },
+    {
+      title: "1651: Bengal Base", desc: "British establish a factory at Hooghly. Assam trade flows via Hadirachaki.",
+      term: "Kandahar Choki", def: "Ahom frontier outpost monopolizing Bengal trade.",
+      active: ["goa", "surat", "hooghly", "hadirachaki"],
+      influence: { overall: { brit: 25, port: 40, fren: 5, dutch: 30 }, silk: { brit: 10, port: 0, fren: 0, dutch: 10 } },
+      routes: [ ["sea", [[10, 60], [15.2993, 74.1240]]], ["bay", [[10, 85], [18, 87], [22.9010, 88.3965]]] ]
+    },
+    {
+      title: "1757: Plassey", desc: "British victory secures Bengal, aggressively targeting Assam's silk.",
+      term: "Farman", def: "An imperial decree for duty-free trade.",
+      active: ["goa", "calcutta", "hooghly", "hadirachaki"],
+      influence: { overall: { brit: 65, port: 10, fren: 15, dutch: 10 }, silk: { brit: 80, port: 0, fren: 10, dutch: 10 } },
+      routes: [ ["bay", [[10, 85], [22.5726, 88.3639]]], ["riv", [[22.5726, 88.3639], [24.5, 88.5], [26.1700, 90.6200]]] ]
+    },
+    {
+      title: "1826: Yandabo", desc: "Assam annexed by the British EIC, opening internal trade networks.",
+      term: "Treaty of Yandabo", def: "1826 treaty ending the First Anglo-Burmese War.",
+      active: ["calcutta", "hadirachaki", "guwahati"],
+      influence: { overall: { brit: 90, port: 5, fren: 3, dutch: 2 }, silk: { brit: 100, port: 0, fren: 0, dutch: 0 } },
+      routes: [ ["bay", [[10, 85], [22.5726, 88.3639]]], ["riv", [[22.5726, 88.3639], [26.1700, 90.6200], [26.1445, 91.7362]]] ]
+    },
+    {
+      title: "1857: Steamers", desc: "River steamers navigate the Brahmaputra to Sadiya before the 1857 uprising.",
+      term: "Colonial Economy", def: "Exploiting a colonized region's resources for profit.",
+      active: ["calcutta", "guwahati", "sadiya"],
+      influence: { overall: { brit: 98, port: 2, fren: 0, dutch: 0 }, silk: { brit: 100, port: 0, fren: 0, dutch: 0 } },
+      routes: [ ["riv", [[22.5726, 88.3639], [26.1445, 91.7362], [26.6, 93.5], [27.8333, 95.6667]]] ]
+    }
+  ];
+
+  /* =========================================================
+     MAP & CANVAS LOGIC
+     ========================================================= */
+  // CartoDB Dark Matter for Cinematic Vibe
+  const map = L.map('leaflet-map', { zoomControl: false, attributionControl: false }).setView([22.5, 82.5], window.innerWidth < 768 ? 4 : 5);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png').addTo(map);
+
+  const createIcon = (isHub) => L.divIcon({
+    className: `pulse-marker ${isHub ? 'hub' : ''}`,
+    iconSize: isHub ? [18, 18] : [14, 14], iconAnchor: isHub ? [9, 9] : [7, 7]
+  });
+
+  let markers = {};
+  Object.keys(settlements).forEach(k => {
+    const s = settlements[k];
+    const m = L.marker([s.lat, s.lng], { icon: createIcon(s.isHub) });
+    m.on('click', () => openSheet(k));
+    markers[k] = m;
+  });
+
+  const canvas = document.getElementById('route-canvas');
+  const ctx = canvas.getContext('2d');
+  let activePaths = [], particles = [];
+
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  function spawnParticles(path, count) {
+    for(let i=0; i<count; i++) {
+      particles.push({ path: path, progress: Math.random(), speed: 0.002 + Math.random()*0.003 });
+    }
+  }
+
+  function getPathPoint(path, t) {
+    const total = path.length - 1, exact = t * total, idx = Math.floor(exact), rem = exact - idx;
+    if (idx >= total) return path[total];
+    const p1 = path[idx], p2 = path[idx + 1];
+    return { lat: p1[0] + (p2[0] - p1[0]) * rem, lng: p1[1] + (p2[1] - p1[1]) * rem };
+  }
+
+  function render() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Draw glowing neon lines
+    ctx.beginPath();
+    ctx.strokeStyle = "rgba(6, 182, 212, 0.2)";
+    ctx.lineWidth = 3;
+    activePaths.forEach(path => {
+      path.forEach((pt, i) => {
+        const px = map.latLngToContainerPoint([pt[0], pt[1]]);
+        if (i === 0) ctx.moveTo(px.x, px.y); else ctx.lineTo(px.x, px.y);
+      });
+    });
+    ctx.stroke();
+
+    // Draw moving glowing particles
+    particles.forEach(p => {
+      p.progress += p.speed; if(p.progress >= 1) p.progress = 0;
+      const pt = getPathPoint(p.path, p.progress);
+      const px = map.latLngToContainerPoint([pt.lat, pt.lng]);
+      
+      ctx.beginPath();
+      ctx.arc(px.x, px.y, 3, 0, Math.PI * 2);
+      ctx.fillStyle = "#fff";
+      ctx.shadowBlur = 15;
+      ctx.shadowColor = "#06b6d4"; // Cyan glow
+      ctx.fill();
+    });
+    ctx.shadowBlur = 0;
+    requestAnimationFrame(render);
+  }
+  map.on('move', () => {}); requestAnimationFrame(render);
+
+  /* =========================================================
+     UI INTERACTIONS
+     ========================================================= */
+  let currentEra = 0, activeCom = 'overall';
+  
+  document.getElementById('time-slider').addEventListener('input', (e) => updateEra(parseInt(e.target.value)));
+  document.querySelectorAll('.com-tab').forEach(t => {
+    t.addEventListener('click', (e) => {
+      document.querySelectorAll('.com-tab').forEach(b => b.classList.remove('active'));
+      e.target.classList.add('active');
+      activeCom = e.target.getAttribute('data-com');
+      updateMeter();
+    });
+  });
+
+  function updateEra(idx) {
+    currentEra = idx; const era = eras[idx];
+    document.getElementById('year-display').innerText = era.title;
+    document.getElementById('exam-desc').innerText = era.desc;
+    document.getElementById('exam-term').innerText = era.term + ":";
+    document.getElementById('exam-def').innerText = era.def;
+
+    Object.keys(markers).forEach(k => map.removeLayer(markers[k]));
+    era.active.forEach(k => markers[k].addTo(map));
+
+    activePaths = era.routes.map(r => r[1]);
+    particles = []; activePaths.forEach(p => spawnParticles(p, window.innerWidth < 768 ? 10 : 20));
+
+    updateMeter();
+    closeSheet();
+  }
+
+  function updateMeter() {
+    const data = eras[currentEra].influence[activeCom];
+    document.getElementById('bar-brit').style.width = data.brit + '%';
+    document.getElementById('bar-port').style.width = data.port + '%';
+    document.getElementById('bar-fren').style.width = data.fren + '%';
+    document.getElementById('bar-dutch').style.width = data.dutch + '%';
+  }
+
+  function toggleExam() {
+    document.getElementById('exam-modal').classList.toggle('active');
+  }
+
+  const sheet = document.getElementById('sheet');
+  function openSheet(id) {
+    const s = settlements[id];
+    
+    // Pan dynamically based on screen size to make room for sheet
+    const panOffset = window.innerWidth < 768 ? [s.lat - 2.5, s.lng] : [s.lat, s.lng - 3];
+    map.flyTo(panOffset, map.getZoom(), { duration: 0.6 });
+
+    document.getElementById('sb-title').innerText = s.name;
+    document.getElementById('sb-img').src = `./assets/images/${s.img}.jpg`; 
+    
+    const badges = document.getElementById('sb-badges');
+    badges.innerHTML = '';
+    s.commodities.forEach(c => {
+      let cls = c.includes('Silk') ? 'silk' : '';
+      badges.innerHTML += `<span class="tag ${cls}">${c}</span>`;
+    });
+
+    document.getElementById('sb-source-title').innerText = s.sourceTitle;
+    document.getElementById('sb-source-text').innerText = `"${s.sourceText}"`;
+
+    document.getElementById('exam-modal').classList.remove('active');
+    sheet.classList.add('active');
+  }
+
+  function closeSheet() { sheet.classList.remove('active'); }
+
+  // Init
+  updateEra(0);
+
+  // Mobile Swipe Down to Close Sheet
+  let touchY = 0;
+  sheet.addEventListener('touchstart', e => touchY = e.changedTouches[0].screenY);
+  sheet.addEventListener('touchend', e => {
+    if (e.changedTouches[0].screenY - touchY > 50) closeSheet();
+  });
+</script>
+</body>
+</html>
