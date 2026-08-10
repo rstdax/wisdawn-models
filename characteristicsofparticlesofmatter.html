@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Characteristics of Particles of Matter | Wisdawn Interactive Lab</title>
+
+  <!-- Google Fonts: Nunito Sans per Wisdawn Guidelines -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Three.js and OrbitControls via CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+  <style>
+    :root {
+      /* Wisdawn Color Tokens */
+      --wis-blue: #2D5FF4;
+      --wis-blue-dark: #2454D9;
+      --wis-text: #10172A;
+      --wis-text-secondary: #64748B;
+      --wis-text-muted: #94A3B8;
+      --wis-white: #FFFFFF;
+      --wis-blue-soft: #F3F7FF;
+      --wis-neutral-soft: #F5F7FB;
+      --wis-gold: #F4C557;
+      --wis-gold-soft: #FFF8E6;
+      --wis-border: #E6EBF2;
+      --wis-border-soft: #EEF2F7;
+      
+      /* Geometry Tokens */
+      --radius-sm: 12px;
+      --radius-md: 16px;
+      --radius-lg: 20px;
+      --radius-xl: 24px;
+      --radius-pill: 999px;
+      
+      --font-primary: 'Nunito Sans', sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; height: 100%; }
+    
+    body {
+      background-color: var(--wis-white);
+      color: var(--wis-text);
+      font-family: var(--font-primary);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .app-container {
+      width: 100%;
+      max-width: 1000px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      height: calc(100vh - 48px);
+    }
+
+    /* Top Navigation (Tabs) */
+    /* Top Navigation (Tabs) */
+.tab-bar {
+  display: flex;
+  flex-wrap: nowrap; /* Force items to stay in a single row */
+  gap: 8px;
+  background: var(--wis-neutral-soft);
+  padding: 6px;
+  border-radius: var(--radius-pill);
+  overflow-x: auto;
+  scrollbar-width: none; /* Firefox */
+  -webkit-overflow-scrolling: touch; /* Smooth swipe scrolling on iOS */
+}
+.tab-bar::-webkit-scrollbar { display: none; } /* Chrome/Safari */
+
+.tab-btn {
+  flex: 0 0 auto; /* FIX: Prevents stretching/shrinking, allowing natural width */
+  padding: 12px 20px;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-pill);
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--wis-text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+  white-space: nowrap;
+}
+.tab-btn:hover { color: var(--wis-text); }
+.tab-btn.active {
+  background: var(--wis-blue);
+  color: var(--wis-white);
+  box-shadow: 0 2px 8px rgba(45, 95, 244, 0.25);
+}
+
+    /* 3D Canvas Area */
+    .stage-card {
+      flex: 1;
+      position: relative;
+      background: var(--wis-white);
+      border: 1px solid var(--wis-border);
+      border-radius: var(--radius-xl);
+      box-shadow: 0 4px 16px rgba(16, 23, 42, 0.04);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .stage-header {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      z-index: 10;
+      pointer-events: none;
+    }
+    .stage-title {
+      margin: 0;
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--wis-text);
+      letter-spacing: -0.01em;
+    }
+    .stage-subtitle {
+      margin: 4px 0 0 0;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--wis-text-secondary);
+    }
+
+    #webgl-container {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(180deg, #F8FAFC 0%, #Eef2f7 100%);
+      cursor: grab;
+    }
+    #webgl-container:active { cursor: grabbing; }
+
+    /* Bottom Control Bar */
+    .control-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      background: var(--wis-white);
+      border: 1px solid var(--wis-border);
+      border-radius: var(--radius-xl);
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(16, 23, 42, 0.04);
+    }
+
+    .controls-dynamic {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      min-height: 52px;
+    }
+
+    @media (max-width: 600px) {
+      .controls-dynamic { flex-direction: column; align-items: stretch; }
+    }
+
+    /* Sliders & Buttons */
+    .slider-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .slider-label {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--wis-text);
+      display: flex;
+      justify-content: space-between;
+    }
+    .slider-val { color: var(--wis-blue); }
+    
+    input[type=range] {
+      -webkit-appearance: none;
+      width: 100%;
+      background: transparent;
+    }
+    input[type=range]::-webkit-slider-runnable-track {
+      width: 100%;
+      height: 8px;
+      background: var(--wis-border-soft);
+      border-radius: var(--radius-pill);
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      height: 24px;
+      width: 24px;
+      border-radius: 50%;
+      background: var(--wis-white);
+      border: 2px solid var(--wis-blue);
+      margin-top: -8px;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(16, 23, 42, 0.1);
+    }
+
+    .primary-btn {
+      background: var(--wis-blue);
+      color: var(--wis-white);
+      border: none;
+      padding: 14px 24px;
+      border-radius: var(--radius-md);
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 15px;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .primary-btn:hover { background: var(--wis-blue-dark); }
+    .primary-btn:active { transform: scale(0.97); }
+
+    .segmented-control {
+      display: flex;
+      background: var(--wis-neutral-soft);
+      border-radius: var(--radius-pill);
+      padding: 4px;
+    }
+    .segment-btn {
+      flex: 1;
+      border: none;
+      background: transparent;
+      padding: 10px 16px;
+      border-radius: var(--radius-pill);
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--wis-text-secondary);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .segment-btn.active {
+      background: var(--wis-white);
+      color: var(--wis-text);
+      box-shadow: 0 2px 8px rgba(16, 23, 42, 0.06);
+    }
+
+    /* Educational Observation Card */
+    .observation-card {
+      background: var(--wis-gold-soft);
+      border: 1px solid #F5E7BE;
+      border-radius: var(--radius-md);
+      padding: 16px;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+    .observation-icon {
+      background: var(--wis-gold);
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: white;
+      font-weight: bold;
+    }
+    .observation-text {
+      margin: 0;
+      font-size: 14.5px;
+      line-height: 1.5;
+      color: var(--wis-text);
+      font-weight: 500;
+    }
+    .observation-text b { font-weight: 700; color: #8A6A10; }
+  </style>
+</head>
+<body>
+
+<div class="app-container">
+  
+  <!-- Tabs -->
+  <nav class="tab-bar">
+    <button class="tab-btn active" data-mode="1">1. Small Size</button>
+    <button class="tab-btn" data-mode="2">2. Spaces Between</button>
+    <button class="tab-btn" data-mode="3">3. Continuous Motion</button>
+    <button class="tab-btn" data-mode="4">4. Mutual Attraction</button>
+  </nav>
+
+  <!-- 3D Canvas Viewport -->
+  <div class="stage-card">
+    <div class="stage-header">
+      <h2 class="stage-title" id="ui-title">Particles are extremely small</h2>
+      <p class="stage-subtitle" id="ui-subtitle">Zoom in to reveal the microscopic nature of matter.</p>
+    </div>
+    <div id="webgl-container"></div>
+  </div>
+
+  <!-- Bottom Control Panel -->
+  <div class="control-panel">
+    
+    <!-- Dynamic Controls Container -->
+    <div class="controls-dynamic" id="dynamic-controls">
+      <!-- Injected via JS based on mode -->
+    </div>
+
+    <!-- Observation Card -->
+    <div class="observation-card">
+      <div class="observation-icon">i</div>
+      <p class="observation-text" id="obs-text">
+        Matter appears continuous to the naked eye, but <b>zooming in 1,000,000x</b> reveals it is made of millions of tiny, discrete particles.
+      </p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/**
+ * Wisdawn 3D Interactive Lab
+ * Characteristics of Particles of Matter
+ * WebGL / Three.js Implementation
+ */
+
+let scene, camera, renderer, controls;
+let currentMode = 1;
+let modeObjects = []; // Keep track of objects to dispose when switching modes
+let animationId;
+let clock = new THREE.Clock();
+
+// Mode specific state variables
+let m1_outerSphere, m1_particles;
+let m2_sugar = [];
+let m2_dropping = false;
+let m3_air = [], m3_perfume = [], m3_temp = 50;
+let m4_particles = [], m4_lines, m4_state = 'solid';
+
+init();
+animate();
+
+function init() {
+  const container = document.getElementById('webgl-container');
+
+  // Scene & Camera
+  scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0xEef2f7, 0.015);
+  
+  camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
+  camera.position.set(0, 5, 40);
+
+  // Renderer
+  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setSize(container.clientWidth, container.clientHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  container.appendChild(renderer.domElement);
+
+  // OrbitControls
+  controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.05;
+  controls.minDistance = 5;
+  controls.maxDistance = 100;
+
+  // Lighting
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+  scene.add(ambientLight);
+
+  const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+  dirLight.position.set(10, 20, 10);
+  dirLight.castShadow = true;
+  scene.add(dirLight);
+
+  const pointLight = new THREE.PointLight(0x2D5FF4, 0.5, 50);
+  pointLight.position.set(-10, 10, 10);
+  scene.add(pointLight);
+
+  // Events
+  window.addEventListener('resize', onWindowResize);
+  
+  // Tab Listeners
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      e.target.classList.add('active');
+      switchMode(parseInt(e.target.dataset.mode));
+    });
+  });
+
+  // Init First Mode
+  switchMode(1);
+}
+
+function clearMode() {
+  modeObjects.forEach(obj => {
+    scene.remove(obj);
+    if(obj.geometry) obj.geometry.dispose();
+    if(obj.material) {
+      if(Array.isArray(obj.material)) obj.material.forEach(m => m.dispose());
+      else obj.material.dispose();
+    }
+  });
+  modeObjects = [];
+  controls.target.set(0,0,0);
+}
+
+function switchMode(mode) {
+  currentMode = mode;
+  clearMode();
+  
+  const uiTitle = document.getElementById('ui-title');
+  const uiSub = document.getElementById('ui-subtitle');
+  const dynControls = document.getElementById('dynamic-controls');
+  const obsText = document.getElementById('obs-text');
+
+  camera.position.set(0, 5, 40);
+
+  if (mode === 1) {
+    uiTitle.textContent = "Particles are extremely small";
+    uiSub.textContent = "Zoom in to reveal the microscopic nature of matter.";
+    dynControls.innerHTML = `
+      <div class="slider-wrap">
+        <div class="slider-label"><span>Magnification</span> <span class="slider-val" id="val-zoom">1x</span></div>
+        <input type="range" id="zoom-slider" min="1" max="100" value="1">
+      </div>
+    `;
+    obsText.innerHTML = "Matter appears continuous to the naked eye, but <b>zooming in</b> reveals it is made of millions of tiny, discrete particles.";
+    
+    setupMode1();
+    
+    document.getElementById('zoom-slider').addEventListener('input', (e) => {
+      let val = e.target.value;
+      document.getElementById('val-zoom').textContent = (val * 10000) + "x";
+      // Update opacity and camera
+      m1_outerSphere.material.opacity = 1 - (val / 100);
+      camera.position.z = 40 - (val / 100) * 30;
+    });
+
+  } else if (mode === 2) {
+    uiTitle.textContent = "Spaces between particles";
+    uiSub.textContent = "Particles of one matter slip into the void spaces of another.";
+    dynControls.innerHTML = `
+      <button class="primary-btn" id="btn-sugar">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        Add Sugar Solute
+      </button>
+    `;
+    obsText.innerHTML = "When sugar dissolves, its tiny particles fit perfectly into the <b>interstitial spaces</b> between water molecules, so the water level doesn't rise.";
+    
+    setupMode2();
+    
+    document.getElementById('btn-sugar').addEventListener('click', () => {
+      m2_dropping = true;
+      // reset sugar heights to fall again
+      m2_sugar.forEach(s => s.position.y = 15 + Math.random() * 10);
+    });
+
+  } else if (mode === 3) {
+    uiTitle.textContent = "Continuous Motion";
+    uiSub.textContent = "Particles possess kinetic energy and intermix (diffusion).";
+    dynControls.innerHTML = `
+      <div class="slider-wrap" style="flex:1;">
+        <div class="slider-label"><span>Temperature</span> <span class="slider-val" id="val-temp">50°C</span></div>
+        <input type="range" id="temp-slider" min="0" max="100" value="50">
+      </div>
+      <button class="primary-btn" id="btn-perfume" style="flex:1;">Release Perfume</button>
+    `;
+    obsText.innerHTML = "Particles are in a state of <b>continuous Brownian motion</b>. Higher temperature increases kinetic energy, making them move and diffuse faster.";
+    
+    setupMode3();
+
+    document.getElementById('temp-slider').addEventListener('input', (e) => {
+      m3_temp = parseInt(e.target.value);
+      document.getElementById('val-temp').textContent = m3_temp + "°C";
+    });
+    
+    document.getElementById('btn-perfume').addEventListener('click', () => {
+      m3_perfume.forEach(p => {
+        p.position.set(-8, -8, -8); // release from corner
+        p.visible = true;
+      });
+    });
+
+  } else if (mode === 4) {
+    uiTitle.textContent = "Mutual Attraction";
+    uiSub.textContent = "Intermolecular forces dictate the state of matter.";
+    dynControls.innerHTML = `
+      <div class="segmented-control" style="width: 100%;">
+        <button class="segment-btn active" data-state="solid">Solid</button>
+        <button class="segment-btn" data-state="liquid">Liquid</button>
+        <button class="segment-btn" data-state="gas">Gas</button>
+      </div>
+    `;
+    obsText.innerHTML = "In <b>Solids</b>, maximum force keeps particles rigid. In <b>Liquids</b>, intermediate force allows sliding. In <b>Gases</b>, negligible force lets them fly freely.";
+    
+    setupMode4();
+
+    document.querySelectorAll('.segment-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        document.querySelectorAll('.segment-btn').forEach(b => b.classList.remove('active'));
+        e.target.classList.add('active');
+        m4_state = e.target.dataset.state;
+        
+        if(m4_state === 'solid') obsText.innerHTML = "<b>Solids:</b> Strong mutual attraction forms a rigid lattice structure.";
+        if(m4_state === 'liquid') obsText.innerHTML = "<b>Liquids:</b> Moderate forces allow particles to stay close but slide past one another.";
+        if(m4_state === 'gas') obsText.innerHTML = "<b>Gases:</b> Weak intermolecular forces. Particles move rapidly and randomly in all directions.";
+      });
+    });
+  }
+}
+
+/* ==========================================
+   MODE 1: SMALL SIZE
+   ========================================== */
+function setupMode1() {
+  // Glass outer sphere
+  const glassGeo = new THREE.SphereGeometry(12, 64, 64);
+  const glassMat = new THREE.MeshPhysicalMaterial({
+    color: 0xffffff, transmission: 0.9, opacity: 1, transparent: true,
+    roughness: 0.1, ior: 1.5, thickness: 0.5
+  });
+  m1_outerSphere = new THREE.Mesh(glassGeo, glassMat);
+  scene.add(m1_outerSphere);
+  modeObjects.push(m1_outerSphere);
+
+  // Instanced inner particles
+  const pCount = 3000;
+  const pGeo = new THREE.SphereGeometry(0.3, 8, 8);
+  const pMat = new THREE.MeshStandardMaterial({
+    color: 0x43C7B2, emissive: 0x2D5FF4, emissiveIntensity: 0.5
+  });
+  m1_particles = new THREE.InstancedMesh(pGeo, pMat, pCount);
+  
+  const matrix = new THREE.Matrix4();
+  const position = new THREE.Vector3();
+  for(let i=0; i<pCount; i++) {
+    // Random position inside radius 11
+    let r = 11 * Math.cbrt(Math.random());
+    let theta = Math.random() * 2 * Math.PI;
+    let phi = Math.acos(2 * Math.random() - 1);
+    position.set(r * Math.sin(phi) * Math.cos(theta), r * Math.sin(phi) * Math.sin(theta), r * Math.cos(phi));
+    matrix.setPosition(position);
+    m1_particles.setMatrixAt(i, matrix);
+  }
+  scene.add(m1_particles);
+  modeObjects.push(m1_particles);
+}
+
+/* ==========================================
+   MODE 2: SPACES BETWEEN
+   ========================================== */
+function setupMode2() {
+  camera.position.set(0, 8, 30);
+  
+  // Beaker
+  const beakerGeo = new THREE.CylinderGeometry(10, 10, 15, 32, 1, true);
+  const beakerMat = new THREE.MeshPhysicalMaterial({
+    color: 0xeeeeee, transmission: 0.9, transparent: true, roughness: 0.1, side: THREE.DoubleSide
+  });
+  const beaker = new THREE.Mesh(beakerGeo, beakerMat);
+  beaker.position.y = -2.5;
+  scene.add(beaker);
+  modeObjects.push(beaker);
+  
+  // Beaker Base
+  const baseGeo = new THREE.CylinderGeometry(10, 10, 0.5, 32);
+  const base = new THREE.Mesh(baseGeo, beakerMat);
+  base.position.y = -10;
+  scene.add(base);
+  modeObjects.push(base);
+
+  // Water particles (Large, Blue)
+  const wGeo = new THREE.SphereGeometry(1.2, 16, 16);
+  const wMat = new THREE.MeshStandardMaterial({ color: 0x2D5FF4, roughness: 0.2, metalness: 0.1 });
+  
+  for(let i=0; i<150; i++) {
+    let w = new THREE.Mesh(wGeo, wMat);
+    // scatter at bottom of beaker
+    let r = 8 * Math.sqrt(Math.random());
+    let theta = Math.random() * 2 * Math.PI;
+    w.position.set(r * Math.cos(theta), -8 + (Math.random() * 6), r * Math.sin(theta));
+    scene.add(w);
+    modeObjects.push(w);
+  }
+
+  // Sugar particles (Small, Yellow)
+  m2_sugar = [];
+  const sGeo = new THREE.SphereGeometry(0.4, 8, 8);
+  const sMat = new THREE.MeshStandardMaterial({ color: 0xF4C557 });
+  for(let i=0; i<80; i++) {
+    let s = new THREE.Mesh(sGeo, sMat);
+    let r = 8 * Math.sqrt(Math.random());
+    let theta = Math.random() * 2 * Math.PI;
+    s.position.set(r * Math.cos(theta), 20 + Math.random() * 10, r * Math.sin(theta)); // Start high
+    // Target resting pos inside water gaps
+    s.userData.targetY = -8 + (Math.random() * 6);
+    scene.add(s);
+    modeObjects.push(s);
+    m2_sugar.push(s);
+  }
+}
+
+/* ==========================================
+   MODE 3: CONTINUOUS MOTION
+   ========================================== */
+function setupMode3() {
+  const boxSize = 20;
+  const boxGeo = new THREE.BoxGeometry(boxSize, boxSize, boxSize);
+  const boxMat = new THREE.MeshBasicMaterial({ color: 0x94A3B8, wireframe: true, transparent: true, opacity: 0.3 });
+  const box = new THREE.Mesh(boxGeo, boxMat);
+  scene.add(box);
+  modeObjects.push(box);
+
+  m3_air = []; m3_perfume = [];
+  const pGeo = new THREE.SphereGeometry(0.6, 16, 16);
+  const airMat = new THREE.MeshStandardMaterial({ color: 0x94A3B8 });
+  const perfMat = new THREE.MeshStandardMaterial({ color: 0xEF5965, emissive: 0xEF5965, emissiveIntensity: 0.4 });
+
+  // Spawn Air
+  for(let i=0; i<120; i++) {
+    let p = new THREE.Mesh(pGeo, airMat);
+    p.position.set((Math.random()-0.5)*18, (Math.random()-0.5)*18, (Math.random()-0.5)*18);
+    p.userData.vel = new THREE.Vector3((Math.random()-0.5), (Math.random()-0.5), (Math.random()-0.5)).normalize();
+    scene.add(p);
+    modeObjects.push(p);
+    m3_air.push(p);
+  }
+
+  // Spawn Perfume (hidden initially)
+  for(let i=0; i<40; i++) {
+    let p = new THREE.Mesh(pGeo, perfMat);
+    p.position.set(-8, -8, -8);
+    p.userData.vel = new THREE.Vector3(Math.random(), Math.random(), Math.random()).normalize();
+    p.visible = false;
+    scene.add(p);
+    modeObjects.push(p);
+    m3_perfume.push(p);
+  }
+}
+
+/* ==========================================
+   MODE 4: MUTUAL ATTRACTION
+   ========================================== */
+function setupMode4() {
+  m4_particles = [];
+  const pGeo = new THREE.SphereGeometry(0.7, 16, 16);
+  const pMat = new THREE.MeshStandardMaterial({ color: 0x43C7B2 });
+
+  // Create 4x4x4 lattice
+  let offset = -6;
+  for(let x=0; x<4; x++) {
+    for(let y=0; y<4; y++) {
+      for(let z=0; z<4; z++) {
+        let p = new THREE.Mesh(pGeo, pMat);
+        let targetPos = new THREE.Vector3(offset + x*4, offset + y*4, offset + z*4);
+        p.position.copy(targetPos);
+        p.userData = {
+          latticePos: targetPos,
+          vel: new THREE.Vector3(0,0,0)
+        };
+        scene.add(p);
+        modeObjects.push(p);
+        m4_particles.push(p);
+      }
+    }
+  }
+
+  // Lines
+  const lineMat = new THREE.LineBasicMaterial({ color: 0x2D5FF4, transparent: true, opacity: 0.6 });
+  const lineGeo = new THREE.BufferGeometry();
+  // Max possible lines for N=64 is small enough
+  const positions = new Float32Array(64 * 64 * 3);
+  lineGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  m4_lines = new THREE.LineSegments(lineGeo, lineMat);
+  scene.add(m4_lines);
+  modeObjects.push(m4_lines);
+}
+
+
+/* ==========================================
+   ANIMATION LOOP
+   ========================================== */
+function animate() {
+  animationId = requestAnimationFrame(animate);
+  const dt = clock.getDelta();
+  const time = clock.getElapsedTime();
+
+  controls.update();
+
+  if (currentMode === 1) {
+    if(m1_particles) m1_particles.rotation.y += 0.2 * dt;
+    if(m1_outerSphere) m1_outerSphere.rotation.y -= 0.1 * dt;
+  } 
+  
+  else if (currentMode === 2) {
+    if(m2_dropping) {
+      m2_sugar.forEach(s => {
+        if(s.position.y > s.userData.targetY) {
+          s.position.y -= 15 * dt; // fall speed
+        }
+      });
+    }
+  } 
+  
+  else if (currentMode === 3) {
+    const speed = 2 + (m3_temp * 0.15);
+    const bounds = 9.5;
+    
+    [...m3_air, ...m3_perfume].forEach(p => {
+      if(!p.visible) return;
+      
+      // Brownian jitter
+      p.userData.vel.add(new THREE.Vector3((Math.random()-0.5)*0.2, (Math.random()-0.5)*0.2, (Math.random()-0.5)*0.2)).normalize();
+      
+      p.position.addScaledVector(p.userData.vel, speed * dt);
+      
+      // Bounce
+      if(p.position.x > bounds || p.position.x < -bounds) { p.userData.vel.x *= -1; p.position.x = Math.sign(p.position.x) * bounds; }
+      if(p.position.y > bounds || p.position.y < -bounds) { p.userData.vel.y *= -1; p.position.y = Math.sign(p.position.y) * bounds; }
+      if(p.position.z > bounds || p.position.z < -bounds) { p.userData.vel.z *= -1; p.position.z = Math.sign(p.position.z) * bounds; }
+    });
+  } 
+  
+  else if (currentMode === 4) {
+    const positions = m4_lines.geometry.attributes.position.array;
+    let lineIdx = 0;
+
+    m4_particles.forEach((p, i) => {
+      if(m4_state === 'solid') {
+        // Return strongly to lattice
+        let diff = p.userData.latticePos.clone().sub(p.position);
+        p.position.add(diff.multiplyScalar(0.1));
+        // Add tiny jiggle
+        p.position.x += Math.sin(time*10 + i)*0.05;
+      } 
+      else if(m4_state === 'liquid') {
+        // 1. Gravity and Brownian motion
+        p.userData.vel.y -= 6.0 * dt; // Gravity pulling them into a puddle
+        p.userData.vel.x += (Math.random() - 0.5) * 2.0;
+        p.userData.vel.z += (Math.random() - 0.5) * 2.0;
+
+        p.position.addScaledVector(p.userData.vel, dt);
+        p.userData.vel.multiplyScalar(0.9); // Friction
+
+        // 2. Particle Collision (Repulsion) to prevent overlapping
+        for(let j = i + 1; j < m4_particles.length; j++) {
+          let p2 = m4_particles[j];
+          let diff = p.position.clone().sub(p2.position);
+          let dist = diff.length();
+          let minDist = 1.6; // Particle diameter is 1.4, so 1.6 gives a little spacing
+
+          if (dist < minDist && dist > 0.001) {
+            let overlap = (minDist - dist) * 0.5;
+            diff.normalize().multiplyScalar(overlap);
+            
+            // Push particles apart directly
+            p.position.add(diff);
+            p2.position.sub(diff);
+            
+            // Dampen velocity slightly to prevent jitter
+            p.userData.vel.multiplyScalar(0.8);
+            p2.userData.vel.multiplyScalar(0.8);
+          }
+        }
+
+        // 3. Container bounds (puddle boundaries)
+        const b = 6;
+        if(p.position.x > b) { p.position.x = b; p.userData.vel.x *= -0.5; }
+        if(p.position.x < -b) { p.position.x = -b; p.userData.vel.x *= -0.5; }
+        if(p.position.z > b) { p.position.z = b; p.userData.vel.z *= -0.5; }
+        if(p.position.z < -b) { p.position.z = -b; p.userData.vel.z *= -0.5; }
+        if(p.position.y < -4) { p.position.y = -4; p.userData.vel.y *= -0.5; } // Floor
+      } 
+      else if(m4_state === 'gas') {
+        // Fly fast randomly
+        p.userData.vel.add(new THREE.Vector3((Math.random()-0.5)*0.5, (Math.random()-0.5)*0.5, (Math.random()-0.5)*0.5));
+        p.userData.vel.normalize().multiplyScalar(15);
+        p.position.addScaledVector(p.userData.vel, dt);
+        
+        // Hard boundaries to prevent escape
+        const b = 10;
+        if(p.position.x > b) { p.position.x = b; p.userData.vel.x *= -1; }
+        if(p.position.x < -b) { p.position.x = -b; p.userData.vel.x *= -1; }
+        if(p.position.y > b) { p.position.y = b; p.userData.vel.y *= -1; }
+        if(p.position.y < -b) { p.position.y = -b; p.userData.vel.y *= -1; }
+        if(p.position.z > b) { p.position.z = b; p.userData.vel.z *= -1; }
+        if(p.position.z < -b) { p.position.z = -b; p.userData.vel.z *= -1; }
+      }
+
+      // Draw links based on distance
+      if (m4_state !== 'gas') {
+        for(let j=i+1; j<m4_particles.length; j++) {
+          let p2 = m4_particles[j];
+          let dist = p.position.distanceTo(p2.position);
+          let threshold = m4_state === 'solid' ? 5 : 3.5; // Liquids have shorter connection lines
+          
+          if(dist < threshold) {
+            positions[lineIdx++] = p.position.x;
+            positions[lineIdx++] = p.position.y;
+            positions[lineIdx++] = p.position.z;
+            positions[lineIdx++] = p2.position.x;
+            positions[lineIdx++] = p2.position.y;
+            positions[lineIdx++] = p2.position.z;
+          }
+        }
+      }
+    });
+
+    m4_lines.geometry.setDrawRange(0, lineIdx / 3);
+    m4_lines.geometry.attributes.position.needsUpdate = true;
+    m4_lines.visible = (m4_state !== 'gas');
+  }
+
+  renderer.render(scene, camera);
+}
+
+function onWindowResize() {
+  const container = document.getElementById('webgl-container');
+  camera.aspect = container.clientWidth / container.clientHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(container.clientWidth, container.clientHeight);
+}
+</script>
+</body>
+</html>
