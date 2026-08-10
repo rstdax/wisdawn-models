@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>Dissolving & Diffusion Sandbox — Wisdawn</title>
+<style>
+  :root{
+    --wis-blue:#2D5FF4;
+    --wis-blue-dark:#2454D9;
+    --wis-text:#10172A;
+    --wis-text-secondary:#64748B;
+    --wis-text-muted:#94A3B8;
+    --wis-white:#FFFFFF;
+    --wis-blue-soft:#F3F7FF;
+    --wis-neutral-soft:#F5F7FB;
+    --wis-gold:#F4C557;
+    --wis-gold-soft:#FFF8E6;
+    --wis-green:#91CD23;
+    --wis-green-soft:#EAF8D8;
+    --wis-mint:#43C7B2;
+    --wis-mint-soft:#EFFBF8;
+    --wis-red:#EF5965;
+    --wis-red-soft:#FFF2F2;
+    --wis-border:#E6EBF2;
+    --wis-border-soft:#EEF2F7;
+    --radius-sm:12px;
+    --radius-md:16px;
+    --radius-lg:20px;
+    --radius-xl:24px;
+    --radius-hero:28px;
+    --radius-pill:999px;
+    --ink-purple:#7C4DE0;
+    --ink-blue:#2D5FF4;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--wis-neutral-soft);
+    font-family:'Nunito Sans','Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    color:var(--wis-text);
+    -webkit-tap-highlight-color:transparent;
+  }
+
+  .page{
+    max-width:1240px;
+    margin:0 auto;
+    padding:24px 24px 48px;
+  }
+
+  /* ---------- Header ---------- */
+  .wis-header{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    padding:16px 4px 20px;
+    border-bottom:1px solid var(--wis-border-soft);
+    margin-bottom:24px;
+  }
+  .wis-header .mark{
+    width:48px;height:48px;border-radius:14px;
+    background:var(--wis-blue-soft);
+    display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+  }
+  .wis-header .titles{flex:1; min-width:0;}
+  .wis-header h1{
+    font-size:26px;font-weight:800;margin:0;line-height:1.15;color:var(--wis-text);
+    letter-spacing:-0.01em;
+  }
+  .wis-header .eyebrow{
+    display:inline-flex;align-items:center;gap:6px;
+    font-size:12.5px;font-weight:700;color:var(--wis-blue);
+    background:var(--wis-blue-soft);
+    padding:4px 10px 4px 8px;border-radius:var(--radius-pill);
+    margin-bottom:8px;
+  }
+  .wis-header .eyebrow svg{width:14px;height:14px;}
+  .wis-header p{margin:6px 0 0;color:var(--wis-text-secondary);font-size:14.5px;font-weight:500;}
+
+  /* ---------- Layout ---------- */
+  .layout{
+    display:grid;
+    grid-template-columns: 1.55fr 1fr;
+    gap:20px;
+    align-items:start;
+  }
+  @media (max-width: 880px){
+    .layout{grid-template-columns:1fr;}
+  }
+
+  .card{
+    background:var(--wis-white);
+    border:1px solid var(--wis-border);
+    border-radius:var(--radius-xl);
+    box-shadow:0 2px 8px rgba(16,23,42,.06);
+  }
+
+  /* ---------- Canvas Card ---------- */
+  .stage-card{padding:18px 18px 20px;}
+  .stage-head{
+    display:flex;justify-content:space-between;align-items:flex-start;
+    gap:12px; padding:2px 4px 14px;
+  }
+  .stage-head h2{font-size:18px;font-weight:700;margin:0 0 3px;color:var(--wis-text);}
+  .stage-head .sub{font-size:13px;color:var(--wis-text-secondary);font-weight:500;}
+  .fps-pill{
+    font-size:11.5px;font-weight:700;color:var(--wis-text-muted);
+    background:var(--wis-neutral-soft);
+    border:1px solid var(--wis-border-soft);
+    padding:5px 10px;border-radius:var(--radius-pill);
+    white-space:nowrap;
+  }
+
+  .canvas-wrap{
+    position:relative;
+    width:100%;
+    aspect-ratio: 4 / 5;
+    max-height:640px;
+    background:linear-gradient(180deg,#FFFFFF 0%, #FBFCFE 100%);
+    border:1px solid var(--wis-border-soft);
+    border-radius:var(--radius-lg);
+    overflow:hidden;
+  }
+  canvas{display:block;width:100%;height:100%;touch-action:none;}
+
+  .drop-hint{
+    position:absolute; left:50%; top:12px; transform:translateX(-50%);
+    font-size:12px; font-weight:700; color:var(--wis-text-muted);
+    background:rgba(255,255,255,.85); backdrop-filter:blur(2px);
+    padding:5px 12px; border-radius:var(--radius-pill);
+    border:1px solid var(--wis-border-soft);
+    opacity:0; transition:opacity .3s ease; pointer-events:none;
+    white-space:nowrap;
+  }
+  .drop-hint.show{opacity:1;}
+
+  /* ---------- Toolbar ---------- */
+  .toolbar{
+    display:flex; flex-wrap:wrap; gap:10px;
+    margin-top:16px;
+  }
+  .tbtn{
+    display:flex; align-items:center; gap:8px;
+    border:1px solid var(--wis-border);
+    background:var(--wis-white);
+    color:var(--wis-text);
+    font-family:inherit; font-weight:700; font-size:13.5px;
+    padding:11px 16px; border-radius:16px;
+    cursor:pointer; transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+    min-height:44px;
+    line-height:1.25;
+  }
+  .tbtn:hover{border-color:#D7DEEA; box-shadow:0 4px 16px rgba(16,23,42,.08);}
+  .tbtn:active{transform:scale(.97);}
+  .tbtn svg{width:18px;height:18px;flex-shrink:0;}
+  .tbtn .swatch{width:14px;height:14px;border-radius:50%;flex-shrink:0;}
+  .tbtn.purple .swatch{background:var(--ink-purple);}
+  .tbtn.blue .swatch{background:var(--ink-blue);}
+  .tbtn:disabled{opacity:.45; cursor:not-allowed; box-shadow:none; transform:none;}
+
+  .tbtn.stir{background:var(--wis-blue-soft); border-color:transparent; color:var(--wis-blue-dark);}
+  .tbtn.stir:hover{border-color:transparent;}
+  .tbtn.reset{background:var(--wis-neutral-soft); color:var(--wis-text-secondary); border-color:transparent;}
+
+  .heat-toggle{
+    display:flex; align-items:center; gap:10px;
+    border:1px solid var(--wis-border);
+    background:var(--wis-white);
+    padding:9px 14px 9px 12px; border-radius:16px;
+    min-height:44px; margin-left:auto;
+  }
+  .heat-toggle .flame-ico{width:18px;height:18px; flex-shrink:0;}
+  .heat-toggle .label{font-weight:700; font-size:13.5px; color:var(--wis-text);}
+  .switch{
+    position:relative; width:42px; height:24px; border-radius:var(--radius-pill);
+    background:var(--wis-border); cursor:pointer; transition:background .2s ease; flex-shrink:0;
+  }
+  .switch.on{background:var(--wis-red);}
+  .switch .knob{
+    position:absolute; top:3px; left:3px; width:18px; height:18px; border-radius:50%;
+    background:var(--wis-white); box-shadow:0 1px 3px rgba(16,23,42,.25);
+    transition:transform .2s ease;
+  }
+  .switch.on .knob{transform:translateX(18px);}
+
+  /* ---------- Side panel ---------- */
+  .panel{display:flex; flex-direction:column; gap:16px;}
+  .panel-card{padding:18px;}
+  .panel-card h3{
+    font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:.04em;
+    color:var(--wis-text-muted); margin:0 0 14px;
+  }
+
+  /* kinetic energy gauge */
+  .ke-row{display:flex; align-items:baseline; justify-content:space-between; margin-bottom:8px;}
+  .ke-row .val{font-size:22px; font-weight:800; color:var(--wis-text);}
+  .ke-row .unit{font-size:12px; font-weight:600; color:var(--wis-text-muted); margin-left:4px;}
+  .ke-row .state{
+    font-size:12.5px; font-weight:700; padding:4px 10px; border-radius:var(--radius-pill);
+    background:var(--wis-blue-soft); color:var(--wis-blue-dark);
+  }
+  .ke-track{
+    width:100%; height:10px; border-radius:var(--radius-pill);
+    background:var(--wis-neutral-soft); border:1px solid var(--wis-border-soft);
+    overflow:hidden;
+  }
+  .ke-fill{
+    height:100%; width:10%; border-radius:var(--radius-pill);
+    background:linear-gradient(90deg, var(--wis-blue), var(--wis-blue));
+    transition:width .25s ease, background .4s ease;
+  }
+
+  /* diffusion status */
+  .status-pill{
+    display:inline-flex; align-items:center; gap:8px;
+    font-size:14px; font-weight:800; padding:8px 14px;
+    border-radius:var(--radius-pill);
+    background:var(--wis-neutral-soft); color:var(--wis-text-secondary);
+    transition:background .3s ease, color .3s ease;
+  }
+  .status-pill .dot{width:8px;height:8px;border-radius:50%; background:var(--wis-text-muted); flex-shrink:0;}
+  .status-pill.diffusing{background:var(--wis-blue-soft); color:var(--wis-blue-dark);}
+  .status-pill.diffusing .dot{background:var(--wis-blue);}
+  .status-pill.done{background:var(--wis-green-soft); color:#3E6B0E;}
+  .status-pill.done .dot{background:var(--wis-green);}
+
+  .progress-track{
+    margin-top:12px; width:100%; height:8px; border-radius:var(--radius-pill);
+    background:var(--wis-neutral-soft); border:1px solid var(--wis-border-soft); overflow:hidden;
+  }
+  .progress-fill{height:100%; width:0%; border-radius:var(--radius-pill); background:var(--wis-mint); transition:width .3s ease;}
+
+  /* takeaway note */
+  .note-card{
+    background:var(--wis-gold-soft);
+    border:1px solid #F5E7BE;
+    border-radius:var(--radius-lg);
+    padding:16px;
+  }
+  .note-card .note-head{
+    display:flex; align-items:center; gap:8px; margin-bottom:8px;
+  }
+  .note-card .note-head svg{width:16px;height:16px;}
+  .note-card .note-head span{font-size:12px; font-weight:800; color:#8A6A10; text-transform:uppercase; letter-spacing:.03em;}
+  .note-card p{margin:0; font-size:14px; line-height:1.55; color:var(--wis-text); font-weight:500;}
+
+  .legend{display:flex; flex-direction:column; gap:10px; margin-top:2px;}
+  .legend-row{display:flex; align-items:center; gap:10px; font-size:13px; color:var(--wis-text-secondary); font-weight:600;}
+  .legend-row .dotc{width:11px;height:11px;border-radius:50%; flex-shrink:0;}
+
+  footer.foot{
+    text-align:center; margin-top:28px; font-size:12.5px; color:var(--wis-text-muted); font-weight:600;
+  }
+
+  /* ---------- Mobile Adaptations ---------- */
+  @media (max-width: 600px){
+    .page { padding: 12px 12px 24px; }
+    .wis-header { flex-direction: column; align-items: flex-start; padding: 12px 0 16px; margin-bottom: 16px; gap: 12px; }
+    .wis-header h1 { font-size: 22px; }
+    .wis-header .titles { width: 100%; }
+    
+    .layout { gap: 16px; }
+    .stage-card, .panel-card, .note-card { padding: 12px; }
+    
+    .stage-head { flex-direction: column; gap: 8px; padding-bottom: 10px; }
+    .fps-pill { align-self: flex-start; }
+
+    /* Make canvas shorter on mobile so controls are immediately reachable */
+    .canvas-wrap {
+      aspect-ratio: 1 / 1.15;
+      max-height: 48vh; 
+    }
+
+    /* Convert toolbar into a highly tappable mobile grid */
+    .toolbar { gap: 8px; }
+    .tbtn {
+      flex: 1 1 calc(50% - 4px);
+      padding: 12px 6px;
+      font-size: 12.5px;
+      min-height: 60px;
+      flex-direction: column;
+      justify-content: center;
+      text-align: center;
+    }
+    .tbtn svg, .tbtn .swatch { margin-bottom: 2px; }
+    
+    .heat-toggle { margin-left: 0; width: 100%; flex: 1 1 100%; justify-content: space-between; padding: 12px 14px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <header class="wis-header">
+    <div class="mark">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M9 2H15" stroke="#2D5FF4" stroke-width="1.8" stroke-linecap="round"/>
+        <path d="M10 2V8.5L4.8 17.2C4.1 18.4 5 20 6.4 20H17.6C19 20 19.9 18.4 19.2 17.2L14 8.5V2" stroke="#2D5FF4" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M7 15.5H17" stroke="#2D5FF4" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="titles">
+      <div class="eyebrow">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M12 2L14.5 8.5L21 11L14.5 13.5L12 20L9.5 13.5L3 11L9.5 8.5L12 2Z" fill="#2D5FF4"/></svg>
+        Class 9 · Matter in Our Surroundings
+      </div>
+      <h1>Dissolving &amp; Diffusion Sandbox</h1>
+      <p>Drop a solute into water, then heat or stir it — watch how particles move and mix.</p>
+    </div>
+  </header>
+
+  <div class="layout">
+
+    <!-- ============ CANVAS / STAGE ============ -->
+    <section class="card stage-card">
+      <div class="stage-head">
+        <div>
+          <h2>The Beaker</h2>
+          <div class="sub">Tap a button below to add a solute, then heat or stir the water.</div>
+        </div>
+        <div class="fps-pill" id="fpsPill">150 particles</div>
+      </div>
+
+      <div class="canvas-wrap" id="canvasWrap">
+        <canvas id="stage"></canvas>
+        <div class="drop-hint" id="dropHint">Diffusing…</div>
+      </div>
+
+      <div class="toolbar">
+        <button class="tbtn purple" id="btnPermanganate" type="button">
+          <span class="swatch"></span> Drop Potassium Permanganate
+        </button>
+        <button class="tbtn blue" id="btnInk" type="button">
+          <span class="swatch"></span> Drop Blue Ink
+        </button>
+        <button class="tbtn stir" id="btnStir" type="button">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M4 12C4 7.6 7.6 4 12 4C15.5 4 18.4 6.3 19.4 9.5" stroke="#2454D9" stroke-width="1.8" stroke-linecap="round"/><path d="M20 12C20 16.4 16.4 20 12 20C8.5 20 5.6 17.7 4.6 14.5" stroke="#2454D9" stroke-width="1.8" stroke-linecap="round"/><path d="M19.4 5.5V9.5H15.4" stroke="#2454D9" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M4.6 18.5V14.5H8.6" stroke="#2454D9" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Stir Solution
+        </button>
+        <button class="tbtn reset" id="btnReset" type="button">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M12 5V2L8 6L12 10V7C15.3 7 18 9.7 18 13C18 16.3 15.3 19 12 19C8.7 19 6 16.3 6 13H4C4 17.4 7.6 21 12 21C16.4 21 20 17.4 20 13C20 8.6 16.4 5 12 5Z" fill="#64748B"/></svg>
+          Reset Beaker
+        </button>
+
+        <div class="heat-toggle" id="heatToggle" role="button" tabindex="0" aria-pressed="false">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <svg class="flame-ico" viewBox="0 0 24 24" fill="none"><path d="M12 2C12 2 7 7.5 7 12.5C7 16.1 9.7 19 12.5 19C15.7 19 18 16.5 18 13.5C18 11 16.5 9.5 16.5 9.5C16.8 11 16 12 15 12C15.8 9.5 14 6.5 11.5 5.5C12 7 11 8.5 9.5 10C8.3 11 7.5 12 8 13.5" stroke="#EF5965" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span class="label">Heat Water</span>
+          </div>
+          <span class="switch" id="heatSwitch"><span class="knob"></span></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SIDE PANEL ============ -->
+    <aside class="panel">
+
+      <div class="card panel-card">
+        <h3>Average Kinetic Energy</h3>
+        <div class="ke-row">
+          <div><span class="val" id="keValue">18</span><span class="unit">rel. units</span></div>
+          <div class="state" id="keState">Baseline</div>
+        </div>
+        <div class="ke-track"><div class="ke-fill" id="keFill"></div></div>
+      </div>
+
+      <div class="card panel-card">
+        <h3>Diffusion Status</h3>
+        <div class="status-pill" id="statusPill"><span class="dot"></span><span id="statusText">Not Mixed</span></div>
+        <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+
+        <div class="legend">
+          <div class="legend-row"><span class="dotc" style="background:#BBD3FF;"></span> Water particles</div>
+          <div class="legend-row"><span class="dotc" style="background:var(--ink-purple);"></span> Potassium permanganate</div>
+          <div class="legend-row"><span class="dotc" style="background:var(--ink-blue);"></span> Blue ink</div>
+        </div>
+      </div>
+
+      <div class="note-card">
+        <div class="note-head">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M12 2L14.5 8.5L21 11L14.5 13.5L12 20L9.5 13.5L3 11L9.5 8.5L12 2Z" fill="#8A6A10"/></svg>
+          <span>Key Takeaway</span>
+        </div>
+        <p id="takeawayText">Drop some potassium permanganate or ink into the beaker to begin the experiment.</p>
+      </div>
+
+    </aside>
+  </div>
+
+  <footer class="foot">Wisdawn Interactive Lab · Diffusion is the movement of particles from a region of higher concentration to lower concentration.</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------------------------------------------------------------
+  // Setup
+  // ---------------------------------------------------------------
+  const canvas = document.getElementById('stage');
+  const ctx = canvas.getContext('2d');
+  const wrap = document.getElementById('canvasWrap');
+  const dropHint = document.getElementById('dropHint');
+
+  let W = 0, H = 0, DPR = Math.min(window.devicePixelRatio || 1, 2);
+
+  const COLORS = {
+    water: 'rgba(133,175,255,0.55)',
+    waterCore: 'rgba(157,193,255,0.85)',
+    liquidFill: 'rgba(243,247,255,0.55)',
+    glass: '#B9C4D4',
+    glassShade: 'rgba(16,23,42,0.04)',
+    permanganate: '#7C4DE0',
+    ink: '#2D5FF4',
+    flameOuter: '#F4C557',
+    flameInner: '#EF5965'
+  };
+
+  // ---------------------------------------------------------------
+  // Beaker geometry (relative to logical canvas size)
+  // ---------------------------------------------------------------
+  function beakerGeom(){
+    const topY = H * 0.11;
+    const waterY = H * 0.20;      // liquid surface
+    // Lifted bottom slightly to ensure burner flame never clips on small responsive heights
+    const bottomY = H * 0.82;     
+    const topHalfW = W * 0.34;
+    const bottomHalfW = W * 0.255;
+    const cx = W * 0.5;
+    const cornerR = Math.min(18, bottomHalfW * 0.25);
+    return {topY, waterY, bottomY, topHalfW, bottomHalfW, cx, cornerR};
+  }
+
+  // left/right x-bound of the LIQUID at a given y (interpolated trapezoid)
+  function liquidBoundsAtY(y){
+    const g = beakerGeom();
+    const t = Math.min(1, Math.max(0, (y - g.waterY) / (g.bottomY - g.waterY)));
+    const halfW = g.topHalfW + (g.bottomHalfW - g.topHalfW) * t;
+    return { left: g.cx - halfW, right: g.cx + halfW };
+  }
+
+  function resize(){
+    const rect = wrap.getBoundingClientRect();
+    W = rect.width;
+    H = rect.height;
+    canvas.width = Math.round(W * DPR);
+    canvas.height = Math.round(H * DPR);
+    canvas.style.width = W + 'px';
+    canvas.style.height = H + 'px';
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+  }
+
+  // ---------------------------------------------------------------
+  // Particle system
+  // ---------------------------------------------------------------
+  let particles = [];   // water
+  let solutes = [];     // solute (permanganate / ink)
+  let flameAnims = [];  // dropper fall animations (visual only, before entering liquid)
+
+  const WATER_COUNT_TARGET = () => Math.round( (W*H) / 5200 ) ; // scale w/ area, ~150-200 on typical size
+
+  function rand(a,b){ return a + Math.random()*(b-a); }
+
+  function makeWaterParticle(){
+    const g = beakerGeom();
+    const y = rand(g.waterY + 8, g.bottomY - 8);
+    const b = liquidBoundsAtY(y);
+    const x = rand(b.left+8, b.right-8);
+    return {
+      x, y,
+      vx: rand(-0.15,0.15),
+      vy: rand(-0.15,0.15),
+      r: rand(2.0, 3.1),
+      jitter: rand(0.09,0.16),
+      solute:false
+    };
+  }
+
+  function seedWater(){
+    particles = [];
+    const n = WATER_COUNT_TARGET();
+    for(let i=0;i<n;i++) particles.push(makeWaterParticle());
+  }
+
+  function spawnSolute(kind){
+    const g = beakerGeom();
+    const color = kind === 'permanganate' ? COLORS.permanganate : COLORS.ink;
+    const count = 30;
+    const startX = g.cx + rand(-8,8);
+    for(let i=0;i<count;i++){
+      // small delay stagger via fallProgress so they trickle in
+      flameAnims.push({
+        x: startX + rand(-4,4),
+        y: g.topY - 30,
+        targetY: g.waterY + rand(2,10),
+        vy: rand(2.6,3.6),
+        delay: i * 2.4,
+        t: 0,
+        color, kind
+      });
+    }
+    dropHint.classList.remove('show');
+  }
+
+  function updateFallingDrops(dt){
+    for(let i=flameAnims.length-1;i>=0;i--){
+      const d = flameAnims[i];
+      if(d.delay > 0){ d.delay -= dt*1000/16.7; continue; }
+      d.y += d.vy;
+      if(d.y >= d.targetY){
+        // enters liquid -> becomes a real solute particle
+        const b = liquidBoundsAtY(d.targetY);
+        solutes.push({
+          x: Math.min(Math.max(d.x, b.left+6), b.right-6),
+          y: d.targetY,
+          vx: rand(-0.3,0.3),
+          vy: rand(0.25,0.55),
+          r: rand(2.2,3.4),
+          jitter: rand(0.14,0.24),
+          color: d.color,
+          solute:true
+        });
+        flameAnims.splice(i,1);
+      }
+    }
+  }
+
+  // ---------------------------------------------------------------
+  // State: heat / stir
+  // ---------------------------------------------------------------
+  let heatOn = false;
+  let stirStrength = 0; // decays over time
+  let stirCenterAngleOffset = 0;
+
+  function heatMultiplier(){ return heatOn ? 2.5 : 1; }
+
+  function applyStir(){
+    stirStrength = 1;
+  }
+
+  // ---------------------------------------------------------------
+  // Physics update
+  // ---------------------------------------------------------------
+  function stepParticle(p, mult){
+    // brownian jitter
+    p.vx += rand(-1,1) * p.jitter * 0.28;
+    p.vy += rand(-1,1) * p.jitter * 0.28;
+
+    // stirring: tangential swirl force around beaker center
+    if(stirStrength > 0.001){
+      const g = beakerGeom();
+      const dx = p.x - g.cx;
+      const dy = p.y - (g.waterY+g.bottomY)/2;
+      const dist = Math.max(18, Math.sqrt(dx*dx+dy*dy));
+      const force = stirStrength * 0.9;
+      p.vx += (-dy/dist) * force;
+      p.vy += ( dx/dist) * force;
+    }
+
+    // speed cap (scales with heat)
+    const maxSpeed = 1.15 * mult;
+    let sp = Math.sqrt(p.vx*p.vx + p.vy*p.vy);
+    if(sp > maxSpeed){
+      p.vx = (p.vx/sp) * maxSpeed;
+      p.vy = (p.vy/sp) * maxSpeed;
+    }
+    // gentle damping so it doesn't runaway
+    p.vx *= 0.992;
+    p.vy *= 0.992;
+
+    p.x += p.vx * mult;
+    p.y += p.vy * mult;
+
+    // boundaries
+    const g = beakerGeom();
+    if(p.y < g.waterY + p.r){ p.y = g.waterY + p.r; p.vy *= -0.6; }
+    if(p.y > g.bottomY - p.r){ p.y = g.bottomY - p.r; p.vy *= -0.6; }
+    const b = liquidBoundsAtY(p.y);
+    if(p.x < b.left + p.r){ p.x = b.left + p.r; p.vx *= -0.6; }
+    if(p.x > b.right - p.r){ p.x = b.right - p.r; p.vx *= -0.6; }
+  }
+
+  function update(dt){
+    const mult = heatMultiplier();
+    for(const p of particles) stepParticle(p, mult);
+    for(const s of solutes) stepParticle(s, mult);
+    updateFallingDrops(dt);
+
+    if(stirStrength > 0){
+      stirStrength -= dt * 0.00055 * 1000/16.7;
+      if(stirStrength < 0) stirStrength = 0;
+    }
+  }
+
+  // ---------------------------------------------------------------
+  // Stats
+  // ---------------------------------------------------------------
+  let smoothedKE = 18;
+  let smoothedSpread = 0;
+
+  function computeStats(){
+    // kinetic energy: average speed across everything
+    let all = particles.concat(solutes);
+    let sum = 0;
+    for(const p of all){ sum += Math.sqrt(p.vx*p.vx + p.vy*p.vy); }
+    const avgSpeed = all.length ? sum/all.length : 0;
+    const keRaw = Math.min(100, (avgSpeed / 1.6) * 100);
+    smoothedKE += (keRaw - smoothedKE) * 0.06;
+
+    // diffusion spread of solute particles vs container
+    let spreadPct = 0;
+    if(solutes.length > 3){
+      const g = beakerGeom();
+      let mx=0,my=0;
+      for(const s of solutes){ mx+=s.x; my+=s.y; }
+      mx/=solutes.length; my/=solutes.length;
+      let vx=0, vy=0;
+      for(const s of solutes){ vx += (s.x-mx)*(s.x-mx); vy += (s.y-my)*(s.y-my); }
+      const stdX = Math.sqrt(vx/solutes.length);
+      const stdY = Math.sqrt(vy/solutes.length);
+      const containerW = (g.topHalfW + g.bottomHalfW); // approx avg full width
+      const containerH = (g.bottomY - g.waterY);
+      const idealStdX = containerW / Math.sqrt(12);
+      const idealStdY = containerH / Math.sqrt(12);
+      const ratio = ((stdX/idealStdX) + (stdY/idealStdY)) / 2;
+      spreadPct = Math.min(100, Math.max(0, ratio*100));
+    }
+    smoothedSpread += (spreadPct - smoothedSpread) * 0.05;
+
+    return { ke: smoothedKE, spread: smoothedSpread };
+  }
+
+  // ---------------------------------------------------------------
+  // Drawing
+  // ---------------------------------------------------------------
+  function drawBeaker(){
+    const g = beakerGeom();
+
+    // glass outline path (trapezoid with rounded bottom corners, open top with spout)
+    ctx.save();
+    ctx.beginPath();
+    const lipOut = 10;
+    ctx.moveTo(g.cx - g.topHalfW - lipOut, g.topY);
+    ctx.lineTo(g.cx - g.topHalfW, g.topY + 10);
+    ctx.lineTo(g.cx - g.bottomHalfW, g.bottomY - g.cornerR);
+    ctx.arcTo(g.cx - g.bottomHalfW, g.bottomY, g.cx - g.bottomHalfW + g.cornerR, g.bottomY, g.cornerR);
+    ctx.lineTo(g.cx + g.bottomHalfW - g.cornerR, g.bottomY);
+    ctx.arcTo(g.cx + g.bottomHalfW, g.bottomY, g.cx + g.bottomHalfW, g.bottomY - g.cornerR, g.cornerR);
+    ctx.lineTo(g.cx + g.topHalfW, g.topY + 10);
+    ctx.lineTo(g.cx + g.topHalfW + lipOut, g.topY);
+    ctx.lineWidth = 2.5;
+    ctx.strokeStyle = COLORS.glass;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    ctx.stroke();
+
+    // liquid fill clip
+    ctx.beginPath();
+    ctx.moveTo(g.cx - g.topHalfW, g.waterY);
+    ctx.lineTo(g.cx - g.bottomHalfW, g.bottomY - g.cornerR);
+    ctx.arcTo(g.cx - g.bottomHalfW, g.bottomY, g.cx - g.bottomHalfW + g.cornerR, g.bottomY, g.cornerR);
+    ctx.lineTo(g.cx + g.bottomHalfW - g.cornerR, g.bottomY);
+    ctx.arcTo(g.cx + g.bottomHalfW, g.bottomY, g.cx + g.bottomHalfW, g.bottomY - g.cornerR, g.cornerR);
+    ctx.lineTo(g.cx + g.topHalfW, g.waterY);
+    ctx.closePath();
+    ctx.fillStyle = COLORS.liquidFill;
+    ctx.fill();
+
+    // graduation marks
+    ctx.strokeStyle = 'rgba(100,116,139,0.35)';
+    ctx.fillStyle = 'rgba(100,116,139,0.55)';
+    ctx.font = '10px Nunito Sans, sans-serif';
+    ctx.lineWidth = 1;
+    const marks = [ [0.30,'100'], [0.50,'75'], [0.68,'50'], [0.84,'25'] ];
+    for(const [t,label] of marks){
+      const y = g.waterY + (g.bottomY-g.waterY)*t;
+      const b = liquidBoundsAtY(y);
+      ctx.beginPath();
+      ctx.moveTo(b.left+3, y);
+      ctx.lineTo(b.left+13, y);
+      ctx.stroke();
+      ctx.fillText(label, b.left+16, y+3);
+    }
+
+    // waterline highlight
+    ctx.beginPath();
+    ctx.moveTo(g.cx-g.topHalfW, g.waterY);
+    ctx.lineTo(g.cx+g.topHalfW, g.waterY);
+    ctx.strokeStyle = 'rgba(45,95,244,0.25)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    ctx.restore();
+  }
+
+  function drawParticles(){
+    for(const p of particles){
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+      ctx.fillStyle = COLORS.water;
+      ctx.fill();
+    }
+    for(const s of solutes){
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+      ctx.fillStyle = s.color;
+      ctx.globalAlpha = 0.82;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+    for(const d of flameAnims){
+      if(d.delay > 0) continue;
+      ctx.beginPath();
+      ctx.arc(d.x, d.y, 2.8, 0, Math.PI*2);
+      ctx.fillStyle = d.color;
+      ctx.fill();
+    }
+  }
+
+  let flameT = 0;
+  function drawFlame(){
+    if(!heatOn) return;
+    const g = beakerGeom();
+    flameT += 0.12;
+    const baseX = g.cx, baseY = g.bottomY + 22;
+    ctx.save();
+    for(let i=-1;i<=1;i++){
+      const wob = Math.sin(flameT*3 + i*2) * 4;
+      const fx = baseX + i*16 + wob*0.3;
+      const scale = 1 - Math.abs(i)*0.28;
+      const h = (22 + Math.sin(flameT*4+i)*4) * scale;
+      const w = 10 * scale;
+      ctx.beginPath();
+      ctx.moveTo(fx, baseY+6);
+      ctx.quadraticCurveTo(fx - w, baseY - h*0.4, fx + wob, baseY - h);
+      ctx.quadraticCurveTo(fx + w, baseY - h*0.4, fx, baseY+6);
+      ctx.fillStyle = COLORS.flameOuter;
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(fx, baseY+3);
+      ctx.quadraticCurveTo(fx - w*0.55, baseY - h*0.35, fx + wob*0.6, baseY - h*0.62);
+      ctx.quadraticCurveTo(fx + w*0.55, baseY - h*0.35, fx, baseY+3);
+      ctx.fillStyle = COLORS.flameInner;
+      ctx.fill();
+    }
+    // burner stand
+    ctx.fillStyle = '#E6EBF2';
+    ctx.fillRect(baseX-30, baseY+6, 60, 6);
+    ctx.restore();
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    drawFlame();
+    drawBeaker();
+    drawParticles();
+  }
+
+  // ---------------------------------------------------------------
+  // UI wiring
+  // ---------------------------------------------------------------
+  const keValue = document.getElementById('keValue');
+  const keState = document.getElementById('keState');
+  const keFill = document.getElementById('keFill');
+  const statusPill = document.getElementById('statusPill');
+  const statusText = document.getElementById('statusText');
+  const progressFill = document.getElementById('progressFill');
+  const takeawayText = document.getElementById('takeawayText');
+  const fpsPill = document.getElementById('fpsPill');
+
+  let lastStatusClass = '';
+
+  function updateUI(stats){
+    // kinetic energy
+    keValue.textContent = Math.round(stats.ke);
+    keFill.style.width = Math.max(4, stats.ke) + '%';
+    if(heatOn){
+      keFill.style.background = 'linear-gradient(90deg, #F4C557, #EF5965)';
+      keState.textContent = 'Heated';
+      keState.style.background = 'var(--wis-red-soft)';
+      keState.style.color = '#B23A44';
+    } else {
+      keFill.style.background = 'linear-gradient(90deg, #2D5FF4, #2D5FF4)';
+      keState.textContent = stats.ke > 32 ? 'Elevated' : 'Baseline';
+      keState.style.background = 'var(--wis-blue-soft)';
+      keState.style.color = '#2454D9';
+    }
+
+    // diffusion status
+    const hasSolute = solutes.length > 3;
+    let cls = 'notmixed', label = 'Not Mixed';
+    if(hasSolute){
+      if(stats.spread >= 78){ cls='done'; label='Fully Homogeneous'; }
+      else { cls='diffusing'; label='Diffusing…'; }
+    }
+    if(cls !== lastStatusClass){
+      statusPill.classList.remove('diffusing','done');
+      if(cls==='diffusing') statusPill.classList.add('diffusing');
+      if(cls==='done') statusPill.classList.add('done');
+      lastStatusClass = cls;
+    }
+    statusText.textContent = label;
+    progressFill.style.width = (hasSolute ? stats.spread : 0) + '%';
+    progressFill.style.background = cls==='done' ? 'var(--wis-green)' : 'var(--wis-mint)';
+
+    // takeaway copy
+    let msg;
+    if(!hasSolute){
+      msg = 'Drop some potassium permanganate or ink into the beaker to begin the experiment.';
+    } else if(cls==='done'){
+      msg = 'The solution is now uniform — every part looks the same. This is a true solution, formed by complete diffusion.';
+    } else if(stirStrength > 0.05){
+      msg = 'Stirring adds mechanical energy that forces rapid mixing — speeding up homogenisation far beyond diffusion alone.';
+    } else if(heatOn){
+      msg = 'Observation: heating increases the water particles\u2019 kinetic energy, so they move faster and diffusion speeds up dramatically!';
+    } else {
+      msg = 'The solute particles move randomly, slowly spreading through the gaps between water particles — this is diffusion.';
+    }
+    takeawayText.textContent = msg;
+
+    fpsPill.textContent = (particles.length + solutes.length) + ' particles';
+  }
+
+  document.getElementById('btnPermanganate').addEventListener('click', ()=> spawnSolute('permanganate'));
+  document.getElementById('btnInk').addEventListener('click', ()=> spawnSolute('ink'));
+  document.getElementById('btnStir').addEventListener('click', applyStir);
+  document.getElementById('btnReset').addEventListener('click', ()=>{
+    solutes = []; flameAnims = []; stirStrength = 0;
+    seedWater();
+    lastStatusClass='';
+  });
+
+  const heatToggle = document.getElementById('heatToggle');
+  const heatSwitch = document.getElementById('heatSwitch');
+  function toggleHeat(){
+    heatOn = !heatOn;
+    heatSwitch.classList.toggle('on', heatOn);
+    heatToggle.setAttribute('aria-pressed', heatOn);
+  }
+  heatToggle.addEventListener('click', toggleHeat);
+  heatToggle.addEventListener('keydown', (e)=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); toggleHeat(); }});
+
+  // ---------------------------------------------------------------
+  // Main loop
+  // ---------------------------------------------------------------
+  let lastT = performance.now();
+  let statTimer = 0;
+
+  function loop(now){
+    const dt = Math.min(40, now - lastT);
+    lastT = now;
+
+    update(dt);
+    draw();
+
+    statTimer += dt;
+    if(statTimer > 80){
+      statTimer = 0;
+      const stats = computeStats();
+      updateUI(stats);
+    }
+    requestAnimationFrame(loop);
+  }
+
+  function init(){
+    resize();
+    seedWater();
+    requestAnimationFrame(loop);
+  }
+
+  window.addEventListener('resize', ()=>{
+    resize();
+  });
+
+  init();
+})();
+</script>
+</body>
+</html>

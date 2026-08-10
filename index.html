@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Wisdawn | Interactive Diagrams for Students</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-0: #070b14;
+            --bg-1: #0c1220;
+            --card: #11182a;
+            --card-soft: #0e1524;
+            --line: rgba(255, 255, 255, 0.08);
+            --ink: #eef3fb;
+            --ink-soft: #8fa0bb;
+            --ink-dim: #5c6c86;
+            --blue: #4da3ff;
+            --blue-deep: #2f7bff;
+            --blue-glow: rgba(77, 163, 255, 0.35);
+            --green: #1fa971;
+            --cyan: #5fe0e6;
+            --font-display: 'Manrope', sans-serif;
+            --font-body: 'Inter', sans-serif;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            min-height: 100vh;
+            min-height: 100dvh;
+            font-family: var(--font-body);
+            color: var(--ink);
+            background:
+                radial-gradient(900px 500px at 50% -12%, rgba(77,163,255,0.12) 0%, transparent 60%),
+                radial-gradient(700px 500px at 100% 100%, rgba(95,224,230,0.08) 0%, transparent 60%),
+                var(--bg-0);
+            -webkit-font-smoothing: antialiased;
+        }
+        button { font-family: inherit; }
+        
+        .page {
+            max-width: 480px;
+            margin: 0 auto;
+            min-height: 100vh;
+            min-height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            padding: 20px 16px 32px;
+            gap: 20px;
+        }
+
+        /* ---- Navbar ---- */
+        .navbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 4px 2px;
+        }
+        .brand {
+            font-family: var(--font-display);
+            font-weight: 800;
+            font-size: 20px;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, #fff 30%, var(--blue) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .badge-tag {
+            font-size: 11px;
+            font-weight: 700;
+            background: rgba(77, 163, 255, 0.15);
+            color: var(--blue);
+            border: 1px solid rgba(77, 163, 255, 0.3);
+            padding: 4px 10px;
+            border-radius: 999px;
+        }
+
+        /* ---- Hero Banner ---- */
+        .hero {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 26px;
+            padding: 28px 20px;
+            text-align: center;
+            box-shadow: 0 20px 50px -18px rgba(0,0,0,0.65);
+            position: relative;
+            overflow: hidden;
+        }
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--blue), transparent);
+        }
+        .hero h1 {
+            font-family: var(--font-display);
+            font-weight: 800;
+            font-size: 24px;
+            line-height: 1.25;
+            margin-bottom: 10px;
+            letter-spacing: -0.02em;
+        }
+        .hero h1 span { color: var(--blue); }
+        .hero p {
+            font-size: 14px;
+            color: var(--ink-soft);
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+        .cta-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            background: var(--blue-deep);
+            color: #fff;
+            border: none;
+            padding: 14px;
+            border-radius: 16px;
+            font-family: var(--font-display);
+            font-weight: 800;
+            font-size: 15px;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(47, 123, 255, 0.4);
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            text-decoration: none;
+        }
+        .cta-btn:hover { transform: scale(1.02); box-shadow: 0 0 25px rgba(47, 123, 255, 0.6); }
+        .cta-btn:active { transform: scale(0.98); }
+
+        /* ---- Section Header ---- */
+        .section-title {
+            font-family: var(--font-display);
+            font-weight: 800;
+            font-size: 16px;
+            color: var(--ink);
+            margin-bottom: 2px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* ---- Features / Labs Grid ---- */
+        .labs-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .lab-card {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 20px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            text-decoration: none;
+            color: inherit;
+            transition: border-color 0.2s, background 0.2s, transform 0.2s;
+            box-shadow: 0 4px 20px -10px rgba(0,0,0,0.4);
+        }
+        .lab-card:hover {
+            border-color: var(--blue);
+            background: #161f34;
+            transform: translateY(-2px);
+        }
+        .lab-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            background: var(--card-soft);
+            border: 1px solid var(--line);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            flex-shrink: 0;
+        }
+        .lab-info { flex: 1; }
+        .lab-category {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--blue);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 2px;
+        }
+        .lab-name {
+            font-family: var(--font-display);
+            font-weight: 800;
+            font-size: 15px;
+            color: var(--ink);
+            margin-bottom: 2px;
+        }
+        .lab-desc {
+            font-size: 12.5px;
+            color: var(--ink-soft);
+            line-height: 1.4;
+        }
+        .arrow-icon {
+            color: var(--ink-dim);
+            font-size: 16px;
+            transition: transform 0.2s;
+        }
+        .lab-card:hover .arrow-icon { transform: translateX(3px); color: var(--blue); }
+
+        /* ---- Footer ---- */
+        .foot {
+            text-align: center;
+            margin-top: auto;
+            color: var(--ink-dim);
+            font-size: 11.5px;
+            padding-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="page">
+    <nav class="navbar">
+        <div class="brand">Wisdawn</div>
+        <div class="badge-tag">Interactive Labs</div>
+    </nav>
+
+    <div class="hero">
+        <h1>Make Learning <span>Fun & Visual</span> for School Students</h1>
+        <p>Explore dynamic, physics-driven, and biological interactive diagrams designed to turn complex concepts into intuitive experiences.</p>
+        <a href="#labs" class="cta-btn">Explore Interactive Labs 🚀</a>
+    </div>
+
+    <div>
+        <div class="section-title">✨ Featured Interactive Labs</div>
+    </div>
+
+    <div class="labs-list" id="labs">
+        <!-- Lab 1: Osmosis -->
+        <a href="osmosis.html" class="lab-card">
+            <div class="lab-icon">🧅</div>
+            <div class="lab-info">
+                <div class="lab-category">Biology • Cell Science</div>
+                <div class="lab-name">Osmosis & Plasmolysis</div>
+                <div class="lab-desc">Observe red onion cells shrivel and restore under microscope solutions.</div>
+            </div>
+            <div class="arrow-icon">→</div>
+        </a>
+
+        <!-- Lab 2: State of Matter -->
+        <a href="matter.html" class="lab-card">
+            <div class="lab-icon">🧊</div>
+            <div class="lab-info">
+                <div class="lab-category">Chemistry • Thermodynamics</div>
+                <div class="lab-name">States of Matter Simulator</div>
+                <div class="lab-desc">Drag temperature ranges from ice crystals to boiling steam dynamically.</div>
+            </div>
+            <div class="arrow-icon">→</div>
+        </a>
+    </div>
+
+    <div class="foot">
+        Wisdawn Interactive Lab Platform · Built for School Students
+    </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,1112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Newton's First Law of Motion | Wisdawn Interactive Lab</title>
+
+    <!-- Preload Videos for seamless transitions -->
+    <link rel="preload" as="video" href="assets/videos/bus_idle.mp4" type="video/mp4">
+    <link rel="preload" as="video" href="assets/videos/bus_start.mp4" type="video/mp4">
+    <link rel="preload" as="video" href="assets/videos/bus_loop.mp4" type="video/mp4">
+    <link rel="preload" as="video" href="assets/videos/bus_stop.mp4" type="video/mp4">
+
+    <style>
+        :root {
+            --page-bg: #eef1f5;
+            --card-bg: #ffffff;
+            --card-border: #e7e9ee;
+            --text-main: #14161a;
+            --text-secondary: #70747d;
+            --text-muted: #9a9ea6;
+
+            --purple: #7c5cff;
+            --purple-soft: #efeaff;
+            --blue: #2f6fed;
+            --blue-soft: #eaf1ff;
+            --green: #1fa971;
+            --green-soft: #e8f8ef;
+            --green-soft-border: #d3f0e0;
+            --orange: #f4a51f;
+            --orange-soft: #fff2df;
+            --red: #ff3b30;
+
+            --radius-xl: 22px;
+            --radius-lg: 16px;
+            --radius-md: 12px;
+            --radius-sm: 10px;
+            --radius-pill: 9999px;
+
+            --shadow-card: 0 1px 2px rgba(16, 24, 40, 0.04), 0 12px 28px rgba(16, 24, 40, 0.06);
+            --shadow-btn: 0 8px 20px rgba(124, 92, 255, 0.28);
+
+            --ease-spring: cubic-bezier(0.25, 1, 0.5, 1);
+            --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: var(--page-bg);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            padding: 40px 20px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .page {
+            width: 100%;
+            max-width: 760px;
+        }
+
+        /* ---------- Scenario Card ---------- */
+        .scenario-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-card);
+            padding: 24px;
+        }
+
+        .scenario-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .scenario-header-left {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+        }
+
+        .header-icon {
+            flex-shrink: 0;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--purple-soft);
+            color: var(--purple);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .header-copy h1 {
+            font-size: 1.05rem;
+            font-weight: 700;
+            margin-bottom: 3px;
+        }
+
+        .header-copy p {
+            font-size: 0.88rem;
+            color: var(--text-secondary);
+        }
+
+        .how-it-works-btn {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #ffffff;
+            border: 1px solid #bcd3fb;
+            color: var(--blue);
+            font-size: 0.82rem;
+            font-weight: 600;
+            padding: 8px 14px;
+            border-radius: var(--radius-pill);
+            cursor: pointer;
+            transition: background 0.2s var(--ease-smooth);
+            white-space: nowrap;
+        }
+
+        .how-it-works-btn:hover { background: var(--blue-soft); }
+
+        /* ---------- Video ---------- */
+        .video-wrapper {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16/9.2;
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            background: #000;
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .video-scrim {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.35), rgba(0,0,0,0) 45%);
+            pointer-events: none;
+        }
+
+        .video-center-controls {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+
+        /* Direct Action Button over video */
+        .video-action-btn {
+            background: rgba(20, 22, 26, 0.75);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #ffffff;
+            font-size: 1.15rem;
+            font-weight: 600;
+            padding: 14px 36px;
+            border-radius: var(--radius-pill);
+            cursor: pointer;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+            transition: transform 0.25s var(--ease-spring), background 0.2s ease, opacity 0.3s ease;
+            user-select: none;
+        }
+
+        .video-action-btn:hover:not(:disabled) {
+            transform: scale(1.05);
+            background: rgba(20, 22, 26, 0.9);
+        }
+
+        .video-action-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
+
+        .video-action-btn.hidden {
+            display: none;
+        }
+
+        .video-action-btn.btn-stop {
+            background: rgba(255, 59, 48, 0.85);
+            border-color: rgba(255, 255, 255, 0.25);
+        }
+
+        .video-action-btn.btn-stop:hover:not(:disabled) {
+            background: rgba(255, 59, 48, 1);
+        }
+
+        /* ---------- Timeline ---------- */
+        .timeline {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 4px;
+            padding: 18px 4px 8px;
+        }
+
+        .timeline-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 8px;
+        }
+
+        .step-badge {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #f1f2f5;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s var(--ease-spring);
+        }
+
+        .timeline-step.active .step-badge,
+        .timeline-step.completed .step-badge {
+            background: var(--blue);
+            color: #fff;
+            box-shadow: 0 6px 14px rgba(47, 111, 237, 0.35);
+        }
+
+        .step-label {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+        }
+
+        .step-sublabel {
+            font-size: 0.68rem;
+            color: var(--text-muted);
+            line-height: 1.2;
+        }
+
+        .timeline-step.active .step-label {
+            color: var(--blue);
+            padding-bottom: 4px;
+            border-bottom: 2px solid var(--blue);
+        }
+
+        /* ---------- Live Observation ---------- */
+        .observation-card {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            background: var(--green-soft);
+            border: 1px solid var(--green-soft-border);
+            border-radius: var(--radius-lg);
+            padding: 16px 18px;
+            margin-top: 20px;
+        }
+
+        .observation-icon {
+            flex-shrink: 0;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: #ffffff;
+            color: var(--green);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .observation-copy { flex: 1; }
+
+        .observation-copy .obs-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            margin-bottom: 2px;
+        }
+
+        .observation-copy .obs-text {
+            font-size: 0.88rem;
+            color: var(--text-secondary);
+            transition: opacity 0.4s ease;
+        }
+
+        .obs-text .highlight {
+            color: var(--green);
+            font-weight: 700;
+        }
+
+        .step-pill {
+            flex-shrink: 0;
+            background: #d7f3e3;
+            color: var(--green);
+            font-size: 0.78rem;
+            font-weight: 700;
+            padding: 6px 12px;
+            border-radius: var(--radius-pill);
+        }
+
+        /* ---------- Predict card ---------- */
+        .predict-card {
+            margin-top: 20px;
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            background: var(--card-bg);
+        }
+
+        .predict-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .predict-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: var(--orange-soft);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+        }
+
+        .predict-title { font-size: 1rem; font-weight: 700; }
+
+        .predict-question {
+            font-size: 0.92rem;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+            line-height: 1.5;
+        }
+
+        .prediction-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .option-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border: 1.5px solid #e7e9ee;
+            border-radius: var(--radius-md);
+            padding: 14px 16px;
+            cursor: pointer;
+            transition: all 0.18s var(--ease-smooth);
+            background: #fff;
+        }
+
+        .option-row:hover:not(.locked) {
+            border-color: #d7d0ff;
+            background: #faf9ff;
+        }
+
+        .option-row .radio {
+            flex-shrink: 0;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            border: 2px solid #cfd2d8;
+            position: relative;
+            transition: border-color 0.18s ease;
+        }
+
+        .option-row .radio::after {
+            content: '';
+            position: absolute;
+            inset: 3px;
+            border-radius: 50%;
+            background: var(--purple);
+            transform: scale(0);
+            transition: transform 0.18s var(--ease-spring);
+        }
+
+        .option-row.selected .radio { border-color: var(--purple); }
+        .option-row.selected .radio::after { transform: scale(1); }
+        .option-row.selected { border-color: var(--purple); background: #faf9ff; }
+
+        .option-row.correct {
+            border-color: var(--green);
+            background: var(--green-soft);
+        }
+        .option-row.correct .radio { border-color: var(--green); }
+        .option-row.correct .radio::after { background: var(--green); transform: scale(1); }
+
+        .option-row.wrong {
+            border-color: #ffc9c5;
+            background: #fff3f2;
+        }
+        .option-row.wrong .radio { border-color: var(--red); }
+        .option-row.wrong .radio::after { background: var(--red); transform: scale(1); }
+
+        .option-row.locked { cursor: default; }
+
+        .option-label { font-size: 0.92rem; font-weight: 600; color: var(--text-main); }
+
+        .prediction-feedback {
+            margin-top: 14px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: none;
+            animation: fadeIn 0.4s ease forwards;
+        }
+
+        .predict-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-top: 18px;
+            flex-wrap: wrap;
+        }
+
+        .predict-hint {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.82rem;
+            font-style: italic;
+            color: #8b7fe0;
+        }
+
+        .submit-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(135deg, #8b78ff, #6c5ce0);
+            color: #fff;
+            border: none;
+            font-size: 0.9rem;
+            font-weight: 700;
+            padding: 12px 22px;
+            border-radius: var(--radius-pill);
+            cursor: pointer;
+            box-shadow: var(--shadow-btn);
+            transition: all 0.25s var(--ease-spring);
+            margin-left: auto;
+        }
+
+        .submit-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 12px 24px rgba(124, 92, 255, 0.38); }
+        .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
+
+        /* ---------- Explanation card ---------- */
+        .explanation-card {
+            margin-top: 20px;
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            background: var(--card-bg);
+            opacity: 1;
+        }
+
+        .explanation-card.hidden { display: none; }
+
+        .explanation-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+
+        .explanation-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: var(--green-soft);
+            color: var(--green);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+        }
+
+        .explanation-title { font-size: 1rem; font-weight: 700; }
+
+        .explanation-text {
+            font-size: 0.9rem;
+            line-height: 1.6;
+            color: var(--text-secondary);
+        }
+
+        .explanation-text .highlight {
+            background: var(--purple-soft);
+            color: var(--purple);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 700;
+        }
+
+        /* ---------- Animations ---------- */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+        }
+
+        .shake { animation: shake 0.4s ease-in-out; }
+        .fade-in { animation: fadeIn 0.5s var(--ease-spring) forwards; }
+
+        /* ---------- Confetti / Celebration ---------- */
+        #confetti-canvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 999;
+        }
+
+        .celebration-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(20, 22, 26, 0.35);
+            backdrop-filter: blur(6px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+
+        .celebration-modal.active { opacity: 1; pointer-events: auto; }
+
+        .celebration-card {
+            background: #fff;
+            padding: 40px;
+            border-radius: var(--radius-xl);
+            text-align: center;
+            box-shadow: var(--shadow-card);
+            max-width: 360px;
+            width: 90%;
+            transform: scale(0.92);
+            transition: transform 0.4s var(--ease-spring);
+        }
+
+        .celebration-modal.active .celebration-card { transform: scale(1); }
+
+        .celebration-card h2 { font-size: 1.5rem; margin-bottom: 12px; }
+
+        .celebration-card p {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+
+        .celebration-card .submit-btn { width: 100%; justify-content: center; margin: 0; }
+
+        /* ---------- Responsive ---------- */
+        @media (max-width: 560px) {
+            .scenario-card { padding: 16px; }
+            .timeline { grid-template-columns: repeat(5, 1fr); gap: 2px; }
+            .step-label { font-size: 0.66rem; }
+            .step-sublabel { display: none; }
+            .step-badge { width: 32px; height: 32px; }
+            .predict-footer { flex-direction: column; align-items: stretch; }
+            .submit-btn { justify-content: center; margin-left: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="page">
+        <div class="scenario-card">
+
+            <!-- Header -->
+            <div class="scenario-header">
+                <div class="scenario-header-left">
+                    <div class="header-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
+                    </div>
+                    <div class="header-copy">
+                        <h1>Interactive Scenario</h1>
+                        <p>Experience Newton's First Law of Motion in action.</p>
+                        
+                    </div>
+                </div>
+            
+            </div>
+
+            <!-- Video -->
+            <div class="video-wrapper" id="video-wrapper">
+                <video id="lesson-video" playsinline muted autoplay loop>
+                    <source src="assets/videos/bus_idle.mp4" type="video/mp4">
+                </video>
+                <div class="video-scrim"></div>
+                <div class="video-center-controls">
+                    <button class="video-action-btn" id="main-action-btn">Predict first</button>
+                </div>
+            </div>
+
+            <!-- Timeline -->
+            <div class="timeline">
+                <div class="timeline-step active" id="step-resting">
+                    <div class="step-badge">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="4" r="2"></circle><path d="M19 13v-2a3 3 0 0 0-3-3h-2.5L11 5"></path><path d="M9 17l-2 4M15 17l2 4M9 17h6l-1.5-5.5"></path></svg>
+                    </div>
+                    <span class="step-label">Resting</span>
+                    <span class="step-sublabel">(Bus is stationary)</span>
+                </div>
+                <div class="timeline-step" id="step-accelerating">
+                    <div class="step-badge">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polyline></svg>
+                    </div>
+                    <span class="step-label">Accelerating</span>
+                    <span class="step-sublabel">(Bus starts)</span>
+                </div>
+                <div class="timeline-step" id="step-moving">
+                    <div class="step-badge">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17h14M5 17a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM19 17a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM5 13l1.5-5h9L17 13"></path></svg>
+                    </div>
+                    <span class="step-label">Moving</span>
+                    <span class="step-sublabel">(Bus moves steadily)</span>
+                </div>
+                <div class="timeline-step" id="step-braking">
+                    <div class="step-badge">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17h14M5 17a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM19 17a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM5 13l1.5-5h9L17 13"></path><line x1="12" y1="2" x2="12" y2="6"></line></svg>
+                    </div>
+                    <span class="step-label">Braking</span>
+                    <span class="step-sublabel">(Bus stops suddenly)</span>
+                </div>
+                <div class="timeline-step" id="step-stopped">
+                    <div class="step-badge">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="7" width="16" height="13" rx="2"></rect><path d="M9 7V5a3 3 0 0 1 6 0v2"></path></svg>
+                    </div>
+                    <span class="step-label">Stopped</span>
+                    <span class="step-sublabel">(Bus stops)</span>
+                </div>
+            </div>
+
+            <!-- Live Observation -->
+            <div class="observation-card">
+                <div class="observation-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                </div>
+                <div class="observation-copy">
+                    <div class="obs-title">Live Observation</div>
+                    <div class="obs-text" id="live-observation">Bus is stationary.</div>
+                </div>
+                <div class="step-pill" id="step-pill">Step 1 of 5</div>
+            </div>
+
+            <!-- Predict -->
+            <div class="predict-card" id="prediction-card">
+                <div class="predict-header">
+                    <div class="predict-icon">🤔</div>
+                    <div class="predict-title">Predict</div>
+                </div>
+                <div class="predict-question">What do you think will happen to the passengers when the bus suddenly starts moving?</div>
+
+                <div class="prediction-options" id="prediction-options">
+                    <div class="option-row" data-answer="forward">
+                        <div class="radio"></div>
+                        <span class="option-label">Passengers lean forward</span>
+                    </div>
+                    <div class="option-row" data-answer="backward">
+                        <div class="radio"></div>
+                        <span class="option-label">Passengers lean backward</span>
+                    </div>
+                </div>
+
+                <div class="prediction-feedback" id="prediction-feedback"></div>
+
+                <div class="predict-footer">
+                    <div class="predict-hint">
+                        <span>💡</span>
+                        <span>Think based on inertia &ndash; objects resist changes in their state of motion.</span>
+                    </div>
+                    <button class="submit-btn" id="submit-prediction-btn" disabled>
+                        Submit Prediction
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Explanation -->
+            <div class="explanation-card hidden" id="explanation-card">
+                <div class="explanation-header">
+                    <div class="explanation-icon">💡</div>
+                    <div class="explanation-title">Concept Unlocked</div>
+                </div>
+                <div class="explanation-text" id="explanation-text"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <canvas id="confetti-canvas"></canvas>
+
+    <div class="celebration-modal" id="celebration-modal">
+        <div class="celebration-card">
+            <h2>🎉 Lesson Complete!</h2>
+            <p>You just experienced Newton's First Law of Motion (Inertia).</p>
+            <button class="submit-btn" onclick="location.reload()">Replay Lesson</button>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * Core State Machine Enum
+         */
+        const States = {
+            IDLE: 'IDLE',
+            STARTING: 'STARTING',
+            MOVING: 'MOVING',
+            STOPPING: 'STOPPING',
+            COMPLETED: 'COMPLETED'
+        };
+
+        const VideoPaths = {
+            IDLE: 'assets/videos/bus_idle.mp4',
+            START: 'assets/videos/bus_start.mp4',
+            LOOP: 'assets/videos/bus_loop.mp4',
+            STOP: 'assets/videos/bus_stop.mp4'
+        };
+
+        const StepOfFive = {
+            [States.IDLE]: 1,
+            [States.STARTING]: 2,
+            [States.MOVING]: 3,
+            [States.STOPPING]: 4,
+            [States.COMPLETED]: 5
+        };
+
+        /**
+         * Video Controller
+         */
+        class VideoController {
+            constructor(videoElement, onVideoEnded) {
+                this.video = videoElement;
+                this.video.addEventListener('ended', onVideoEnded);
+            }
+
+            playVideo(src, loop = false) {
+                this.video.src = src;
+                this.video.loop = loop;
+                this.video.load();
+                const playPromise = this.video.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(err => console.warn('Autoplay prevented or interrupted', err));
+                }
+            }
+        }
+
+        /**
+         * Timeline & Step Indicator Controller
+         */
+        class Timeline {
+            constructor() {
+                this.steps = {
+                    [States.IDLE]: document.getElementById('step-resting'),
+                    [States.STARTING]: document.getElementById('step-accelerating'),
+                    [States.MOVING]: document.getElementById('step-moving'),
+                    [States.STOPPING]: document.getElementById('step-braking'),
+                    [States.COMPLETED]: document.getElementById('step-stopped')
+                };
+                this.pill = document.getElementById('step-pill');
+            }
+
+            setActive(state) {
+                Object.values(this.steps).forEach(el => el.classList.remove('active', 'completed'));
+                const order = [States.IDLE, States.STARTING, States.MOVING, States.STOPPING, States.COMPLETED];
+                const currentIndex = order.indexOf(state);
+
+                order.forEach((s, idx) => {
+                    if (idx < currentIndex) this.steps[s].classList.add('completed');
+                });
+
+                if (this.steps[state]) this.steps[state].classList.add('active');
+                if (this.pill) this.pill.textContent = `Step ${StepOfFive[state]} of 5`;
+            }
+        }
+
+        /**
+         * Live Observation Panel Manager
+         */
+        class ObservationPanel {
+            constructor() {
+                this.textElement = document.getElementById('live-observation');
+            }
+
+            update(text, immediate = false) {
+                if (immediate) { this._setText(text); return; }
+                this.textElement.style.opacity = '0';
+                setTimeout(() => {
+                    this._setText(text);
+                    this.textElement.style.opacity = '1';
+                }, 350);
+            }
+
+            _setText(text) { this.textElement.innerHTML = text; }
+
+            checkTimeUpdates(state, currentTime, duration) {
+                const progress = currentTime / duration;
+
+                if (state === States.STARTING) {
+                    if (progress > 0.1 && progress < 0.4) {
+                        if (this.textElement.innerText !== 'The bus starts moving.') this.update('The bus starts moving.');
+                    } else if (progress >= 0.4 && progress < 0.8) {
+                        if (this.textElement.innerText !== 'Passengers lean backward.') this.update("Passengers <span class='highlight'>lean backward</span>.");
+                    } else if (progress >= 0.8) {
+                        if (this.textElement.innerText !== 'Passengers regain balance.') this.update('Passengers regain balance.');
+                    }
+                } else if (state === States.STOPPING) {
+                    if (progress > 0.1 && progress < 0.4) {
+                        if (this.textElement.innerText !== 'Bus brakes.') this.update('Bus brakes.');
+                    } else if (progress >= 0.4 && progress < 0.8) {
+                        if (this.textElement.innerText !== 'Passengers lean forward.') this.update("Passengers <span class='highlight'>lean forward</span>.");
+                    } else if (progress >= 0.8) {
+                        if (this.textElement.innerText !== 'Bus stops.') this.update('Bus stops.');
+                    }
+                }
+            }
+        }
+
+        /**
+         * Prediction System
+         */
+        class PredictionSystem {
+            constructor(onPredicted, onSubmitted) {
+                this.card = document.getElementById('prediction-card');
+                this.options = document.querySelectorAll('.option-row');
+                this.feedback = document.getElementById('prediction-feedback');
+                this.submitBtn = document.getElementById('submit-prediction-btn');
+
+                this.hasSelected = false;
+                this.hasSubmitted = false;
+                this.selectedAnswer = null;
+                
+                this.onPredictedCallback = onPredicted;
+                this.onSubmittedCallback = onSubmitted;
+
+                this.options.forEach(row => {
+                    row.addEventListener('click', () => this.handleSelection(row));
+                });
+                this.submitBtn.addEventListener('click', () => this.handleSubmit());
+            }
+
+            handleSelection(row) {
+                if (this.hasSubmitted) return;
+                this.hasSelected = true;
+                this.selectedAnswer = row.getAttribute('data-answer');
+
+                this.options.forEach(r => r.classList.remove('selected'));
+                row.classList.add('selected');
+                this.submitBtn.disabled = false;
+
+                if (this.onPredictedCallback) this.onPredictedCallback();
+            }
+
+            handleSubmit() {
+                if (!this.hasSelected || this.hasSubmitted) return;
+                this.hasSubmitted = true;
+
+                this.options.forEach(r => r.classList.add('locked'));
+                this.submitBtn.disabled = true;
+
+                if (this.onSubmittedCallback) this.onSubmittedCallback();
+            }
+
+            revealResult() {
+                const isCorrect = this.selectedAnswer === 'backward';
+
+                this.options.forEach(row => {
+                    if (row.getAttribute('data-answer') === 'backward') {
+                        row.classList.add('correct');
+                        row.classList.remove('selected');
+                    } else if (row.classList.contains('selected')) {
+                        row.classList.add('wrong');
+                    }
+                });
+
+                this.feedback.style.display = 'block';
+                if (isCorrect) {
+                    this.feedback.style.color = 'var(--green)';
+                    this.feedback.innerHTML = '✨ Correct! Inertia keeps them at rest.';
+                } else {
+                    this.feedback.style.color = 'var(--red)';
+                    this.feedback.innerHTML = 'Not quite! The correct answer is they lean backward.';
+                }
+            }
+        }
+
+        /**
+         * Confetti Animation
+         */
+        class Confetti {
+            constructor() {
+                this.canvas = document.getElementById('confetti-canvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.particles = [];
+                this.colors = ['#7c5cff', '#1fa971', '#f4a51f', '#ff3b30', '#2f6fed'];
+                this.isActive = false;
+                this.resize();
+                window.addEventListener('resize', () => this.resize());
+            }
+
+            resize() {
+                this.canvas.width = window.innerWidth;
+                this.canvas.height = window.innerHeight;
+            }
+
+            start() {
+                this.isActive = true;
+                for (let i = 0; i < 100; i++) {
+                    this.particles.push({
+                        x: Math.random() * this.canvas.width,
+                        y: Math.random() * this.canvas.height - this.canvas.height,
+                        w: Math.random() * 10 + 5,
+                        h: Math.random() * 10 + 5,
+                        vx: Math.random() * 4 - 2,
+                        vy: Math.random() * 3 + 2,
+                        c: this.colors[Math.floor(Math.random() * this.colors.length)],
+                        rot: Math.random() * 360,
+                        rotS: Math.random() * 5 - 2.5
+                    });
+                }
+                this.animate();
+            }
+
+            animate() {
+                if (!this.isActive) return;
+                requestAnimationFrame(() => this.animate());
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                this.particles.forEach(p => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.rot += p.rotS;
+                    this.ctx.save();
+                    this.ctx.translate(p.x, p.y);
+                    this.ctx.rotate(p.rot * Math.PI / 180);
+                    this.ctx.fillStyle = p.c;
+                    this.ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+                    this.ctx.restore();
+                });
+            }
+        }
+
+        /**
+         * Lesson Controller
+         */
+        class LessonController {
+            constructor() {
+                this.state = States.IDLE;
+
+                const videoEl = document.getElementById('lesson-video');
+                this.videoController = new VideoController(videoEl, () => this.handleVideoEnded());
+                this.timeline = new Timeline();
+                this.observation = new ObservationPanel();
+                this.confetti = new Confetti();
+
+                this.mainBtn = document.getElementById('main-action-btn');
+                this.explanationCard = document.getElementById('explanation-card');
+                this.explanationText = document.getElementById('explanation-text');
+
+                // Prediction blocks START until answered and submitted
+                this.prediction = new PredictionSystem(
+                    () => {},
+                    () => {
+                        // Prediction is submitted! Make the action button available.
+                        this.mainBtn.disabled = false;
+                        this.mainBtn.textContent = 'START BUS';
+                        this.mainBtn.classList.remove('btn-stop', 'hidden');
+                        
+                        // Scroll up smoothly to center the video stage
+                        document.getElementById('video-wrapper').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        
+                        // Removed this.handleActionBtn() auto-trigger so the user controls when to start it.
+                    }
+                );
+
+                this.setupInitialState();
+
+                this.mainBtn.addEventListener('click', () => this.handleActionBtn());
+
+                videoEl.addEventListener('timeupdate', () => {
+                    if (!isNaN(videoEl.duration)) {
+                        this.observation.checkTimeUpdates(this.state, videoEl.currentTime, videoEl.duration);
+                    }
+                });
+
+                document.addEventListener('keydown', (e) => {
+                    if (e.code === 'Space') { e.preventDefault(); this.handleActionBtn(); }
+                    if (e.code === 'KeyR') location.reload();
+                });
+
+                document.getElementById('how-it-works-btn').addEventListener('click', () => {
+                    this.showExplanation('This interactive lab allows you to observe how inertia works in real-world motion. Predict passenger reactions when the bus accelerates or brakes, then test your understanding.');
+                });
+            }
+
+            setupInitialState() {
+                this.timeline.setActive(States.IDLE);
+                this.observation.update('Bus is stationary.', true);
+                this.mainBtn.disabled = true;
+                this.mainBtn.textContent = 'Predict first';
+                this.mainBtn.classList.remove('btn-stop', 'hidden');
+            }
+
+            handleActionBtn() {
+                if (!this.prediction.hasSubmitted) {
+                    const card = document.getElementById('prediction-card');
+                    card.classList.remove('shake');
+                    void card.offsetWidth;
+                    card.classList.add('shake');
+                    return;
+                }
+
+                if (this.state === States.IDLE) {
+                    this.transitionToStarting();
+                } else if (this.state === States.MOVING) {
+                    this.transitionToStopping();
+                }
+            }
+
+            handleVideoEnded() {
+                if (this.state === States.STARTING) {
+                    this.transitionToMoving();
+                } else if (this.state === States.STOPPING) {
+                    this.transitionToCompleted();
+                }
+            }
+
+            transitionToStarting() {
+                this.state = States.STARTING;
+                this.videoController.playVideo(VideoPaths.START, false);
+                this.timeline.setActive(States.STARTING);
+                
+                // Hide button during acceleration transition
+                this.mainBtn.classList.add('hidden');
+            }
+
+            transitionToMoving() {
+                this.state = States.MOVING;
+                this.videoController.playVideo(VideoPaths.LOOP, true);
+                this.timeline.setActive(States.MOVING);
+
+                this.prediction.revealResult();
+                this.observation.update('Bus is moving uniformly.');
+
+                this.showExplanation('<strong>Inertia of Rest:</strong> The bus accelerated, but the passengers\' bodies resisted this change. Their lower bodies moved with the bus, but their upper bodies tended to remain at rest, causing them to lean backward.');
+
+                // Show STOP BUS button after short delay
+                setTimeout(() => {
+                    this.mainBtn.disabled = false;
+                    this.mainBtn.textContent = 'STOP BUS';
+                    this.mainBtn.classList.add('btn-stop');
+                    this.mainBtn.classList.remove('hidden');
+                }, 1200);
+            }
+
+            transitionToStopping() {
+                this.state = States.STOPPING;
+                this.videoController.playVideo(VideoPaths.STOP, false);
+                this.timeline.setActive(States.STOPPING);
+                
+                // Hide button during braking transition
+                this.mainBtn.classList.add('hidden');
+                
+                this.explanationCard.classList.add('hidden');
+                this.explanationCard.classList.remove('fade-in');
+            }
+
+            transitionToCompleted() {
+                this.state = States.COMPLETED;
+                this.videoController.playVideo(VideoPaths.IDLE, true);
+                this.timeline.setActive(States.COMPLETED);
+                
+                this.mainBtn.classList.add('hidden');
+
+                this.showExplanation('<strong>Inertia of Motion:</strong> When the bus braked suddenly, the passengers\' lower bodies stopped with the bus. However, their upper bodies tended to continue moving forward at the previous speed, causing them to lean forward.');
+
+                setTimeout(() => {
+                    this.confetti.start();
+                    document.getElementById('celebration-modal').classList.add('active');
+                }, 2000);
+            }
+
+            showExplanation(htmlText) {
+                this.explanationCard.classList.remove('hidden');
+                void this.explanationCard.offsetWidth;
+                this.explanationCard.classList.add('fade-in');
+                this.explanationText.innerHTML = htmlText;
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            new LessonController();
+        });
+    </script>
+</body>
+</html>

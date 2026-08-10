@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Human Heart 3D | Wisdawn</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --bg-0: #070b14;
+  --bg-1: #0c1220;
+  --card: #11182a;
+  --card-soft: #0e1524;
+  --line: rgba(255,255,255,0.08);
+  --line-soft: rgba(255,255,255,0.05);
+  --ink: #eef3fb;
+  --ink-soft: #8fa0bb;
+  --ink-dim: #5c6c86;
+  --blue: #4da3ff;
+  --blue-deep: #2f7bff;
+  --red: #ff4d4d;
+  --red-deep: #b32424;
+  --red-glow: rgba(255, 77, 77, 0.35);
+  --font-display: 'Manrope', sans-serif;
+  --font-body: 'Inter', sans-serif;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  min-height: 100vh;
+  min-height: 100dvh;
+  font-family: var(--font-body);
+  color: var(--ink);
+  background: 
+    radial-gradient(900px 500px at 50% -12%, rgba(255,77,77,0.12) 0%, transparent 60%),
+    radial-gradient(700px 500px at 100% 100%, rgba(77,163,255,0.06) 0%, transparent 60%),
+    var(--bg-0);
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;
+}
+
+button { font-family: inherit; border: none; cursor: pointer; outline: none; }
+button:focus-visible { outline: 2.5px solid var(--red); outline-offset: 2px; }
+
+.app {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  padding: 14px 16px 24px;
+}
+
+/* ---- Header ---- */
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 2px 2px 10px;
+  z-index: 10;
+}
+.icon-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 38px; height: 38px; border-radius: 12px;
+  background: var(--card); border: 1px solid var(--line);
+  color: var(--ink-soft);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+  transition: background .18s, color .18s, transform .15s;
+}
+.icon-btn:hover { background: #161f34; color: var(--ink); }
+.icon-btn svg { width: 18px; height: 18px; }
+.title { font-family: var(--font-display); font-weight: 800; font-size: 17px; text-align: center; flex: 1; letter-spacing: -0.01em; }
+
+/* ---- 3D Stage ---- */
+.stage-wrap {
+  position: relative;
+  border-radius: 26px;
+  background: radial-gradient(120% 100% at 50% 50%, #ffffff 0%, #e2e8f0 100%);
+  border: 1px solid var(--line);
+  box-shadow: 0 20px 50px -18px rgba(0,0,0,0.65), inset 0 2px 0 rgba(255,255,255,0.8);
+  height: 400px;
+  width: 100%;
+  margin-bottom: 16px;
+  overflow: hidden;
+  touch-action: none;
+}
+
+#canvas-container { width: 100%; height: 100%; display: block; }
+canvas { display: block; width: 100%; height: 100%; outline: none; }
+
+.status-badge {
+  position: absolute; top: 14px; left: 14px;
+  display: flex; align-items: center; gap: 7px;
+  background: rgba(255, 255, 255, 0.85);
+  color: #070b14; /* Dark text for contrast */
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 8px 14px 8px 10px;
+  border-radius: 999px;
+  font-family: var(--font-display); font-weight: 800; font-size: 13px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  z-index: 10;
+}
+.status-badge .dot {
+  width: 9px; height: 9px; border-radius: 50%;
+  background: var(--red);
+  box-shadow: 0 0 10px 2px var(--red-glow);
+  animation: pulse-dot 1s infinite;
+}
+
+@keyframes pulse-dot {
+  0% { transform: scale(0.95); opacity: 0.8; }
+  50% { transform: scale(1.2); opacity: 1; box-shadow: 0 0 14px 4px var(--red-glow); }
+  100% { transform: scale(0.95); opacity: 0.8; }
+}
+
+/* ---- 3D Labels (HTML Overlays) ---- */
+#labels-container {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  pointer-events: none; overflow: hidden; z-index: 5;
+}
+.label-point {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  opacity: 0; /* Faded initially until positioned */
+  transition: opacity 0.3s ease;
+}
+.label-point.visible { opacity: 1; }
+.label-dot {
+  width: 14px; height: 14px; border-radius: 50%;
+  background: rgba(255,255,255,0.2);
+  border: 2px solid rgba(255,255,255,0.8);
+  backdrop-filter: blur(4px);
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+  position: relative;
+}
+.label-point:hover .label-dot, .label-point.active .label-dot {
+  background: var(--blue); border-color: #fff;
+  transform: scale(1.3);
+  box-shadow: 0 0 12px var(--blue);
+}
+.label-text {
+  background: rgba(17,24,42,0.85);
+  border: 1px solid var(--line);
+  padding: 4px 10px; border-radius: 8px;
+  font-size: 11.5px; font-weight: 700;
+  color: #fff;
+  backdrop-filter: blur(8px);
+  opacity: 0; transform: translateX(-10px);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  pointer-events: none;
+  white-space: nowrap;
+}
+.label-point:hover .label-text, .label-point.active .label-text {
+  opacity: 1; transform: translateX(0);
+}
+
+/* ---- Info Card ---- */
+.info-card {
+  background: var(--card); border: 1px solid var(--line); border-radius: 22px;
+  padding: 20px;
+  box-shadow: 0 4px 20px -10px rgba(0,0,0,0.5);
+  flex-grow: 1;
+  display: flex; flex-direction: column;
+}
+.info-title {
+  font-family: var(--font-display); font-weight: 800; font-size: 18px; color: var(--blue);
+  margin: 0 0 8px 0;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.info-desc {
+  font-size: 14px; color: var(--ink-soft); line-height: 1.6; margin: 0;
+  transition: opacity 0.3s ease;
+}
+
+/* ---- Controls ---- */
+.controls-row {
+  margin-top: 16px; display: flex; gap: 10px;
+}
+.toggle-btn {
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;
+  background: var(--card); border: 1px solid var(--line);
+  padding: 14px; border-radius: 16px;
+  font-weight: 700; font-size: 13.5px; color: var(--ink);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+  transition: all .18s ease;
+}
+.toggle-btn svg { width: 16px; height: 16px; }
+.toggle-btn.active {
+  background: var(--blue-deep); color: #fff; border-color: var(--blue-deep);
+  box-shadow: 0 0 14px rgba(47,123,255,0.4);
+}
+.toggle-btn.active.red-theme {
+  background: var(--red-deep); border-color: var(--red-deep);
+  box-shadow: 0 0 14px rgba(255,77,77,0.4);
+}
+
+.foot { text-align: center; margin-top: 20px; color: var(--ink-dim); font-size: 11px; }
+</style>
+
+<!-- Import Three.js and OrbitControls via ES Modules -->
+<script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    }
+  }
+</script>
+</head>
+<body>
+
+<div class="app">
+  <div style="display: none;" class="topbar">
+    <button class="icon-btn" id="backBtn" aria-label="Back">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <div class="title">Human Heart</div>
+    <button class="icon-btn" id="resetBtn" aria-label="Reset View">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 1 2.6 6.36M3 12V6m0 6h6"/></svg>
+    </button>
+  </div>
+
+  <div class="stage-wrap">
+    <div class="status-badge"><span class="dot"></span><span id="bpmLabel">72 BPM</span></div>
+    <div id="canvas-container"></div>
+    <div id="labels-container"></div>
+  </div>
+
+  <div class="info-card">
+    <h2 class="info-title" id="infoTitle">Select a Region
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+    </h2>
+    <p class="info-desc" id="infoDesc">Interact with the 3D model above. Drag to rotate 360°, scroll to zoom, and tap the highlighted nodes to learn about the heart's anatomy.</p>
+  </div>
+
+  <div class="controls-row">
+    <button class="toggle-btn active red-theme" id="beatBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+      Heartbeat
+    </button>
+    <button class="toggle-btn" id="rotateBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
+      Auto-Rotate
+    </button>
+  </div>
+
+  <div class="foot">Wisdawn Interactive Lab · Drag to rotate, scroll to zoom</div>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+/* ============================================================
+   DATA & LABELS
+   Coordinates mapped to the 3D space.
+   ============================================================ */
+const anatomyData = [
+  { id: 'rv', name: 'Right Ventricle', desc: 'Pumps oxygen-depleted blood to the lungs through the pulmonary artery. It has thinner walls than the left ventricle.', pos: new THREE.Vector3(-1.2, -0.8, 1.2) },
+  { id: 'lv', name: 'Left Ventricle', desc: 'The thickest and strongest chamber. It pumps oxygen-rich blood to the entire body through the aorta.', pos: new THREE.Vector3(1.0, -1.2, 0.8) },
+  { id: 'ra', name: 'Right Atrium', desc: 'Receives deoxygenated blood from the body via the superior and inferior vena cava and pumps it to the right ventricle.', pos: new THREE.Vector3(-1.5, 1.2, 0.5) },
+  { id: 'la', name: 'Left Atrium', desc: 'Receives oxygen-rich blood from the lungs via the pulmonary veins and pumps it into the left ventricle.', pos: new THREE.Vector3(1.2, 1.5, -0.5) },
+  { id: 'aorta', name: 'Aorta', desc: 'The main and largest artery in the human body, originating from the left ventricle and extending down to the abdomen.', pos: new THREE.Vector3(0, 2.8, -0.5) }
+];
+
+/* ============================================================
+   APP & THREE.JS SETUP
+   ============================================================ */
+class App {
+  constructor() {
+    this.container = document.getElementById('canvas-container');
+    this.labelsContainer = document.getElementById('labels-container');
+    
+    this.isBeating = true;
+    this.isRotating = false;
+    this.baseScale = 1.2;
+    this.clock = new THREE.Clock();
+    
+    // Updated to point directly to the single autoconverted GLB file
+    this.gltfUrl = './beating-heart.glb'; 
+
+    this.initThree();
+    this.buildModel();
+    this.createHTML_Labels();
+    this.bindEvents();
+    
+    // Start loop
+    this.renderer.setAnimationLoop((time) => this.render(time));
+  }
+
+  initThree() {
+    // 1. Scene
+    this.scene = new THREE.Scene();
+    
+    // 2. Camera
+    const width = this.container.clientWidth;
+    const height = this.container.clientHeight;
+    this.camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
+    this.camera.position.set(0, 0, 8);
+
+    // 3. Renderer
+    this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    this.renderer.setSize(width, height);
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    
+    // Proper color space and lower exposure to stop the "white out"
+    this.renderer.outputColorSpace = THREE.SRGBColorSpace; 
+    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    this.renderer.toneMappingExposure = 0.8; // Lowered from 1.0
+    
+    this.container.appendChild(this.renderer.domElement);
+
+    // 4. Controls
+    this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+    this.controls.enableDamping = true;
+    this.controls.dampingFactor = 0.05;
+    this.controls.minDistance = 4;
+    this.controls.maxDistance = 15;
+    this.controls.enablePan = false;
+    
+    // 5. Lights (Dialed way back!)
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6); 
+    this.scene.add(ambientLight);
+
+    const mainLight = new THREE.DirectionalLight(0xffffff, 1.0);
+    mainLight.position.set(5, 5, 7);
+    this.scene.add(mainLight);
+
+    const fillLight = new THREE.DirectionalLight(0xfff0f0, 0.5);
+    fillLight.position.set(-5, -5, -5);
+    this.scene.add(fillLight);
+    
+    // 6. ENVIRONMENT MAP
+    const pmremGenerator = new THREE.PMREMGenerator(this.renderer);
+    this.scene.environment = pmremGenerator.fromScene(new RoomEnvironment(), 0.04).texture;
+  }
+
+  buildModel() {
+    this.heartGroup = new THREE.Group();
+    this.scene.add(this.heartGroup);
+
+    if (this.gltfUrl) {
+      const loader = new GLTFLoader();
+      loader.load(
+        this.gltfUrl,
+        (gltf) => {
+          gltf.scene.scale.set(30, 30, 30); 
+          gltf.scene.position.set(0, -3, 0); 
+
+          // THE MAGIC FIX: Strip away the metallic mirror effect!
+          gltf.scene.traverse((child) => {
+            if (child.isMesh && child.material) {
+              child.material.metalness = 0.05; // Fleshy, not metallic
+              child.material.roughness = 0.65; // Matte finish
+            }
+          });
+
+          this.heartGroup.add(gltf.scene);
+        },
+        undefined,
+        (error) => console.error('Error loading model:', error)
+      );
+    }else {
+      // FALLBACK: Procedural Volumetric Heart 
+      // Creates a stylized representation using merged geometries so the demo always works
+      this.buildProceduralHeart();
+    }
+  }
+
+  buildProceduralHeart() {
+    // Beautiful glass/flesh material
+    const matRed = new THREE.MeshPhysicalMaterial({
+      color: 0xaa1122,
+      metalness: 0.1,
+      roughness: 0.3,
+      transmission: 0.2, // glass-like
+      thickness: 1.0,
+      clearcoat: 0.8,
+      clearcoatRoughness: 0.2
+    });
+    
+    const matBlue = new THREE.MeshPhysicalMaterial({
+      color: 0x2f7bff, metalness: 0.1, roughness: 0.4, clearcoat: 0.5
+    });
+
+    // Left Ventricle (Main body)
+    const lvGeo = new THREE.CapsuleGeometry(1, 1.2, 32, 32);
+    const lv = new THREE.Mesh(lvGeo, matRed);
+    lv.position.set(0.4, -0.6, 0);
+    lv.rotation.z = -0.3;
+    this.heartGroup.add(lv);
+
+    // Right Ventricle
+    const rvGeo = new THREE.CapsuleGeometry(0.8, 1, 32, 32);
+    const rv = new THREE.Mesh(rvGeo, matRed);
+    rv.position.set(-0.7, -0.4, 0.5);
+    rv.rotation.z = 0.2;
+    this.heartGroup.add(rv);
+
+    // Left Atrium
+    const laGeo = new THREE.SphereGeometry(0.7, 32, 32);
+    const la = new THREE.Mesh(laGeo, matRed);
+    la.position.set(0.8, 1.2, -0.2);
+    this.heartGroup.add(la);
+
+    // Right Atrium
+    const raGeo = new THREE.SphereGeometry(0.75, 32, 32);
+    const ra = new THREE.Mesh(raGeo, matBlue); // Often depicted blue for deoxygenated
+    ra.position.set(-0.9, 1.1, 0.2);
+    this.heartGroup.add(ra);
+
+    // Aorta Arch
+    const aortaCurve = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(0, 1, 0),
+      new THREE.Vector3(0, 2.5, 0),
+      new THREE.Vector3(1, 2.8, -1),
+      new THREE.Vector3(1.5, 1.5, -1.5)
+    ]);
+    const aortaGeo = new THREE.TubeGeometry(aortaCurve, 20, 0.35, 16, false);
+    const aorta = new THREE.Mesh(aortaGeo, matRed);
+    this.heartGroup.add(aorta);
+    
+    // Vena Cava
+    const venaGeo = new THREE.CylinderGeometry(0.3, 0.3, 3, 16);
+    const vena = new THREE.Mesh(venaGeo, matBlue);
+    vena.position.set(-1.2, 1.5, 0);
+    this.heartGroup.add(vena);
+  }
+
+  createHTML_Labels() {
+    this.labels = [];
+    anatomyData.forEach((data) => {
+      // Create HTML Element
+      const el = document.createElement('div');
+      el.className = 'label-point';
+      el.innerHTML = `
+        <div class="label-dot"></div>
+        <div class="label-text">${data.name}</div>
+      `;
+      this.labelsContainer.appendChild(el);
+
+      // Bind Click
+      el.addEventListener('click', () => {
+        // Remove active class from all
+        this.labels.forEach(l => l.element.classList.remove('active'));
+        el.classList.add('active');
+        
+        // Update Info Card
+        document.getElementById('infoTitle').innerText = data.name;
+        const descEl = document.getElementById('infoDesc');
+        descEl.style.opacity = 0;
+        setTimeout(() => {
+          descEl.innerText = data.desc;
+          descEl.style.opacity = 1;
+        }, 200);
+
+        // Smoothly rotate camera to look at the node
+        this.controls.target.copy(this.heartGroup.position);
+      });
+
+      this.labels.push({ element: el, pos: data.pos });
+    });
+  }
+
+  updateLabels() {
+    const widthHalf = this.container.clientWidth / 2;
+    const heightHalf = this.container.clientHeight / 2;
+
+    this.labels.forEach((label) => {
+      // Copy the 3D position and apply the heart's world matrix
+      const pos = label.pos.clone();
+      pos.applyMatrix4(this.heartGroup.matrixWorld);
+      
+      // Project to 2D Screen Space
+      pos.project(this.camera);
+
+      // Check if behind camera
+      if (pos.z > 1) {
+        label.element.classList.remove('visible');
+        return;
+      }
+
+      // Convert to CSS Coordinates
+      const x = (pos.x * widthHalf) + widthHalf;
+      const y = -(pos.y * heightHalf) + heightHalf;
+
+      label.element.style.left = `${x}px`;
+      label.element.style.top = `${y}px`;
+      label.element.classList.add('visible');
+    });
+  }
+
+  bindEvents() {
+    // Window Resize
+    window.addEventListener('resize', () => {
+      this.camera.aspect = this.container.clientWidth / this.container.clientHeight;
+      this.camera.updateProjectionMatrix();
+      this.renderer.setSize(this.container.clientWidth, this.container.clientHeight);
+    });
+
+    // Toggle Buttons
+    const beatBtn = document.getElementById('beatBtn');
+    beatBtn.addEventListener('click', () => {
+      this.isBeating = !this.isBeating;
+      beatBtn.classList.toggle('active', this.isBeating);
+      document.getElementById('bpmLabel').innerText = this.isBeating ? '72 BPM' : 'Resting';
+    });
+
+    const rotateBtn = document.getElementById('rotateBtn');
+    rotateBtn.addEventListener('click', () => {
+      this.isRotating = !this.isRotating;
+      rotateBtn.classList.toggle('active', this.isRotating);
+    });
+
+    // Reset View
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      this.controls.reset();
+      this.camera.position.set(0, 0, 8);
+      this.heartGroup.rotation.set(0,0,0);
+      this.labels.forEach(l => l.element.classList.remove('active'));
+      document.getElementById('infoTitle').innerHTML = 'Select a Region <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>';
+      document.getElementById('infoDesc').innerText = "Interact with the 3D model above. Drag to rotate 360°, scroll to zoom, and tap the highlighted nodes to learn about the heart's anatomy.";
+    });
+  }
+
+  render(time) {
+    const delta = this.clock.getDelta();
+    const t = time / 1000; // Convert to seconds
+
+    // 1. Heartbeat Animation (Systole & Diastole approximation)
+    if (this.isBeating && this.heartGroup) {
+      // Math function to simulate a double-beat (lub-dub)
+      const beatRate = 1.2; // roughly 72 BPM
+      const phase = (t * Math.PI * 2 * beatRate) % (Math.PI * 2);
+      
+      let scaleOffset = 0;
+      // Lub (sharp contraction)
+      if (phase < 0.6) {
+        scaleOffset = Math.sin(phase * (Math.PI / 0.6)) * 0.08;
+      } 
+      // Dub (secondary contraction)
+      else if (phase > 1.0 && phase < 1.6) {
+        scaleOffset = Math.sin((phase - 1.0) * (Math.PI / 0.6)) * 0.05;
+      }
+      
+      const targetScale = this.baseScale + scaleOffset;
+      this.heartGroup.scale.set(targetScale, targetScale, targetScale);
+    } else {
+      // Smoothly return to base scale when paused
+      this.heartGroup.scale.lerp(new THREE.Vector3(this.baseScale, this.baseScale, this.baseScale), 0.1);
+    }
+
+    // 2. Auto Rotation
+    if (this.isRotating && this.heartGroup) {
+      this.heartGroup.rotation.y += 0.5 * delta;
+    }
+
+    // 3. Update Camera and Labels
+    this.controls.update();
+    
+    // Update labels to follow 3D nodes
+    if (this.heartGroup) {
+      this.heartGroup.updateMatrixWorld();
+      this.updateLabels();
+    }
+
+    this.renderer.render(this.scene, this.camera);
+  }
+}
+
+// Initialize App
+document.addEventListener('DOMContentLoaded', () => {
+  new App();
+});
+</script>
+</body>
+</html>

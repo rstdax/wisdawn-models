@@ -1,0 +1,1310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Osmosis & Plasmolysis | Wisdawn Interactive Lab</title>
+
+    <style>
+        :root {
+            --page-bg: #eef1f5;
+            --card-bg: #ffffff;
+            --card-border: #e7e9ee;
+            --text-main: #14161a;
+            --text-secondary: #70747d;
+            --text-muted: #9a9ea6;
+
+            --purple: #7c5cff;
+            --purple-soft: #efeaff;
+            --blue: #2f6fed;
+            --blue-soft: #eaf1ff;
+            --green: #1fa971;
+            --green-soft: #e8f8ef;
+            --green-soft-border: #d3f0e0;
+            --orange: #f4a51f;
+            --orange-soft: #fff2df;
+            --red: #ff3b30;
+
+            --radius-xl: 22px;
+            --radius-lg: 16px;
+            --radius-md: 12px;
+            --radius-sm: 10px;
+            --radius-pill: 9999px;
+
+            --shadow-card: 0 1px 2px rgba(16, 24, 40, 0.04), 0 12px 28px rgba(16, 24, 40, 0.06);
+            --shadow-btn: 0 8px 20px rgba(124, 92, 255, 0.28);
+
+            --ease-spring: cubic-bezier(0.25, 1, 0.5, 1);
+            --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+            --ease-cell: cubic-bezier(0.65, 0, 0.35, 1);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: var(--page-bg);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            padding: 40px 20px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .page {
+            width: 100%;
+            max-width: 760px;
+        }
+
+        /* ---------- Scenario Card ---------- */
+        .scenario-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-card);
+            padding: 24px;
+        }
+
+        .scenario-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .scenario-header-left {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+        }
+
+        .header-icon {
+            flex-shrink: 0;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--purple-soft);
+            color: var(--purple);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .header-copy h1 {
+            font-size: 1.05rem;
+            font-weight: 700;
+            margin-bottom: 3px;
+        }
+
+        .header-copy p {
+            font-size: 0.88rem;
+            color: var(--text-secondary);
+        }
+
+        .how-it-works-btn {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #ffffff;
+            border: 1px solid #bcd3fb;
+            color: var(--blue);
+            font-size: 0.82rem;
+            font-weight: 600;
+            padding: 8px 14px;
+            border-radius: var(--radius-pill);
+            cursor: pointer;
+            transition: background 0.2s var(--ease-smooth);
+            white-space: nowrap;
+        }
+
+        .how-it-works-btn:hover { background: var(--blue-soft); }
+
+        /* ---------- Viewport / Cell Stage ---------- */
+        .viewport-wrapper {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16/9.2;
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            background: radial-gradient(ellipse at 50% 30%, #1e2a4a 0%, #0f172a 70%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* The animated "microscope" stage */
+        .cell-stage {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+        }
+
+        .cell-wall {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 74%;
+            aspect-ratio: 1.4 / 1;
+            transform: translate(-50%, -50%);
+            border: 3px dashed rgba(255, 255, 255, 0.35);
+            border-radius: 38% 42% 40% 36% / 46% 40% 42% 46%;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .cell-wall-label {
+            position: absolute;
+            bottom: 8%;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.62rem;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.45);
+            font-weight: 700;
+        }
+
+        .membrane-blob {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 66%;
+            height: 66%;
+            transform: translate(-50%, -50%) scale(1);
+            border-radius: 42% 58% 55% 45% / 48% 42% 58% 52%;
+            background: linear-gradient(135deg, rgba(168, 230, 163, 0.55), rgba(124, 92, 255, 0.3));
+            border: 2px solid rgba(180, 255, 200, 0.65);
+            box-shadow: 0 0 34px rgba(124, 92, 255, 0.18) inset;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            /* SLOWED DOWN TRANSITION (2.5s) */
+            transition:
+                transform 2.5s var(--ease-cell),
+                border-radius 2.5s var(--ease-cell),
+                background 2.5s ease,
+                border-color 2.5s ease;
+            animation: idleWobble 6s ease-in-out infinite;
+        }
+
+        @keyframes idleWobble {
+            0%, 100% { border-radius: 42% 58% 55% 45% / 48% 42% 58% 52%; }
+            50% { border-radius: 55% 45% 48% 52% / 42% 55% 45% 58%; }
+        }
+
+        .membrane-blob.plasmolyzed {
+            transform: translate(-68%, -38%) scale(0.5);
+            border-radius: 50% 45% 55% 42% / 55% 48% 45% 55%;
+            background: linear-gradient(135deg, rgba(244, 165, 31, 0.5), rgba(255, 59, 48, 0.22));
+            border-color: rgba(244, 165, 31, 0.75);
+            animation: shrivel 3.5s ease-in-out infinite;
+        }
+
+        @keyframes shrivel {
+            0%, 100% { border-radius: 50% 45% 55% 42% / 55% 48% 45% 55%; }
+            50% { border-radius: 45% 52% 48% 55% / 48% 55% 52% 45%; }
+        }
+
+        .vacuole-blob {
+            width: 80%;
+            height: 80%;
+            border-radius: 45% 55% 50% 48% / 50% 45% 55% 48%;
+            background: rgba(59, 130, 246, 0.25);
+            /* SLOWED DOWN TRANSITION */
+            transition: all 2.5s var(--ease-cell);
+        }
+
+        .membrane-blob.plasmolyzed .vacuole-blob {
+            width: 52%;
+            height: 52%;
+            background: rgba(244, 165, 31, 0.2);
+        }
+
+        .nucleus-dot {
+            position: absolute;
+            width: 14%;
+            height: 14%;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.55);
+            top: 30%;
+            left: 32%;
+            /* SLOWED DOWN TRANSITION */
+            transition: transform 2.5s var(--ease-cell);
+        }
+
+        .membrane-blob.plasmolyzed .nucleus-dot {
+            transform: scale(0.7) translate(-6%, 8%);
+        }
+
+        /* Salt / water particle layer */
+        .particle-layer {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+        }
+
+        .salt-particle {
+            position: absolute;
+            top: -3%;
+            width: 6px;
+            height: 6px;
+            background: #ffffff;
+            border-radius: 2px;
+            opacity: 0.95;
+            box-shadow: 0 0 5px rgba(255, 255, 255, 0.7);
+            /* Slower salt fall */
+            animation: saltFall 1.8s ease-in forwards;
+        }
+
+        @keyframes saltFall {
+            0% { transform: translateY(0) rotate(0deg); opacity: 0.95; }
+            75% { opacity: 0.9; }
+            100% { transform: translateY(180px) rotate(200deg); opacity: 0; }
+        }
+
+        .water-particle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 5px;
+            height: 5px;
+            margin: -2.5px;
+            border-radius: 50%;
+            background: rgba(147, 197, 253, 0.95);
+            box-shadow: 0 0 6px rgba(147, 197, 253, 0.85);
+        }
+
+        .water-particle.out {
+            /* Slower water motion */
+            animation: waterOut 2.2s ease-out forwards;
+        }
+
+        .water-particle.in {
+            animation: waterIn 2.2s ease-in forwards;
+        }
+
+        @keyframes waterOut {
+            from { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            to { opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0.4); }
+        }
+
+        @keyframes waterIn {
+            from { opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0.4); }
+            to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        }
+
+        /* Rinsing wave sweep */
+        .water-wave-layer {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .water-wave-layer.active { opacity: 1; }
+
+        .water-wave {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 55%;
+            background: linear-gradient(90deg,
+                transparent,
+                rgba(59, 130, 246, 0.32),
+                rgba(191, 219, 254, 0.55),
+                rgba(59, 130, 246, 0.32),
+                transparent);
+            transform: translateX(-130%);
+        }
+
+        .water-wave-layer.active .wave-1 { animation: waveSweep 2s ease-in-out; }
+        .water-wave-layer.active .wave-2 { animation: waveSweep 2s ease-in-out 0.25s; }
+        .water-wave-layer.active .wave-3 { animation: waveSweep 2s ease-in-out 0.5s; }
+
+        @keyframes waveSweep {
+            from { transform: translateX(-130%); }
+            to { transform: translateX(130%); }
+        }
+
+        .ripple-ring {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 20%;
+            aspect-ratio: 1/1;
+            border-radius: 50%;
+            border: 2px solid rgba(191, 219, 254, 0.6);
+            transform: translate(-50%, -50%) scale(0.5);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .water-wave-layer.active .ripple-ring {
+            animation: rippleOut 2s ease-out forwards;
+        }
+
+        .water-wave-layer.active .ripple-ring.r2 { animation-delay: 0.4s; }
+        .water-wave-layer.active .ripple-ring.r3 { animation-delay: 0.8s; }
+
+        @keyframes rippleOut {
+            0% { transform: translate(-50%, -50%) scale(0.4); opacity: 0.8; }
+            100% { transform: translate(-50%, -50%) scale(2.6); opacity: 0; }
+        }
+
+        .viewport-scrim {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.4), rgba(0,0,0,0) 45%);
+            pointer-events: none;
+        }
+
+        .viewport-center-controls {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+
+        .video-action-btn {
+            background: rgba(20, 22, 26, 0.8);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+            font-size: 1.1rem;
+            font-weight: 600;
+            padding: 14px 32px;
+            border-radius: var(--radius-pill);
+            cursor: pointer;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+            transition: transform 0.25s var(--ease-spring), background 0.2s ease, opacity 0.3s ease;
+            user-select: none;
+        }
+
+        .video-action-btn:hover:not(:disabled) {
+            transform: scale(1.05);
+            background: rgba(20, 22, 26, 0.95);
+        }
+
+        .video-action-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
+
+        .video-action-btn.hidden { display: none; }
+
+        .video-action-btn.btn-rinse {
+            background: rgba(47, 111, 237, 0.85);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .video-action-btn.btn-rinse:hover:not(:disabled) {
+            background: rgba(47, 111, 237, 1);
+        }
+
+        /* ---------- Timeline ---------- */
+        .timeline {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 4px;
+            padding: 18px 4px 8px;
+        }
+
+        .timeline-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 8px;
+        }
+
+        .step-badge {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #f1f2f5;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s var(--ease-spring);
+            font-size: 1.1rem;
+        }
+
+        .timeline-step.active .step-badge,
+        .timeline-step.completed .step-badge {
+            background: var(--blue);
+            color: #fff;
+            box-shadow: 0 6px 14px rgba(47, 111, 237, 0.35);
+        }
+
+        .step-label {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+        }
+
+        .step-sublabel {
+            font-size: 0.68rem;
+            color: var(--text-muted);
+            line-height: 1.2;
+        }
+
+        .timeline-step.active .step-label {
+            color: var(--blue);
+            padding-bottom: 4px;
+            border-bottom: 2px solid var(--blue);
+        }
+
+        /* ---------- Live Observation ---------- */
+        .observation-card {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            background: var(--green-soft);
+            border: 1px solid var(--green-soft-border);
+            border-radius: var(--radius-lg);
+            padding: 16px 18px;
+            margin-top: 20px;
+        }
+
+        .observation-icon {
+            flex-shrink: 0;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: #ffffff;
+            color: var(--green);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .observation-copy { flex: 1; }
+
+        .observation-copy .obs-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            margin-bottom: 2px;
+        }
+
+        .observation-copy .obs-text {
+            font-size: 0.88rem;
+            color: var(--text-secondary);
+            transition: opacity 0.4s ease;
+        }
+
+        .obs-text .highlight {
+            color: var(--green);
+            font-weight: 700;
+        }
+
+        .step-pill {
+            flex-shrink: 0;
+            background: #d7f3e3;
+            color: var(--green);
+            font-size: 0.78rem;
+            font-weight: 700;
+            padding: 6px 12px;
+            border-radius: var(--radius-pill);
+        }
+
+        /* ---------- Predict card ---------- */
+        .predict-card {
+            margin-top: 20px;
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            background: var(--card-bg);
+        }
+
+        .predict-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .predict-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: var(--orange-soft);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+        }
+
+        .predict-title { font-size: 1rem; font-weight: 700; }
+
+        .predict-question {
+            font-size: 0.92rem;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+            line-height: 1.5;
+        }
+
+        .prediction-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .option-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border: 1.5px solid #e7e9ee;
+            border-radius: var(--radius-md);
+            padding: 14px 16px;
+            cursor: pointer;
+            transition: all 0.18s var(--ease-smooth);
+            background: #fff;
+        }
+
+        .option-row:hover:not(.locked) {
+            border-color: #d7d0ff;
+            background: #faf9ff;
+        }
+
+        .option-row .radio {
+            flex-shrink: 0;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            border: 2px solid #cfd2d8;
+            position: relative;
+            transition: border-color 0.18s ease;
+        }
+
+        .option-row .radio::after {
+            content: '';
+            position: absolute;
+            inset: 3px;
+            border-radius: 50%;
+            background: var(--purple);
+            transform: scale(0);
+            transition: transform 0.18s var(--ease-spring);
+        }
+
+        .option-row.selected .radio { border-color: var(--purple); }
+        .option-row.selected .radio::after { transform: scale(1); }
+        .option-row.selected { border-color: var(--purple); background: #faf9ff; }
+
+        .option-row.correct {
+            border-color: var(--green);
+            background: var(--green-soft);
+        }
+        .option-row.correct .radio { border-color: var(--green); }
+        .option-row.correct .radio::after { background: var(--green); transform: scale(1); }
+
+        .option-row.wrong {
+            border-color: #ffc9c5;
+            background: #fff3f2;
+        }
+        .option-row.wrong .radio { border-color: var(--red); }
+        .option-row.wrong .radio::after { background: var(--red); transform: scale(1); }
+
+        .option-row.locked { cursor: default; }
+
+        .option-label { font-size: 0.92rem; font-weight: 600; color: var(--text-main); }
+
+        .prediction-feedback {
+            margin-top: 14px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: none;
+            animation: fadeIn 0.4s ease forwards;
+        }
+
+        .predict-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-top: 18px;
+            flex-wrap: wrap;
+        }
+
+        .predict-hint {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.82rem;
+            font-style: italic;
+            color: #8b7fe0;
+        }
+
+        .submit-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(135deg, #8b78ff, #6c5ce0);
+            color: #fff;
+            border: none;
+            font-size: 0.9rem;
+            font-weight: 700;
+            padding: 12px 22px;
+            border-radius: var(--radius-pill);
+            cursor: pointer;
+            box-shadow: var(--shadow-btn);
+            transition: all 0.25s var(--ease-spring);
+            margin-left: auto;
+        }
+
+        .submit-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 12px 24px rgba(124, 92, 255, 0.38); }
+        .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
+
+        /* ---------- Explanation card ---------- */
+        .explanation-card {
+            margin-top: 20px;
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            background: var(--card-bg);
+            opacity: 1;
+        }
+
+        .explanation-card.hidden { display: none; }
+
+        .explanation-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+
+        .explanation-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: var(--green-soft);
+            color: var(--green);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+        }
+
+        .explanation-title { font-size: 1rem; font-weight: 700; }
+
+        .explanation-text {
+            font-size: 0.9rem;
+            line-height: 1.6;
+            color: var(--text-secondary);
+        }
+
+        .explanation-text .highlight {
+            background: var(--purple-soft);
+            color: var(--purple);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 700;
+        }
+
+        /* ---------- Animations ---------- */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+        }
+
+        .shake { animation: shake 0.4s ease-in-out; }
+        .fade-in { animation: fadeIn 0.5s var(--ease-spring) forwards; }
+
+        /* ---------- Confetti / Celebration ---------- */
+        #confetti-canvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 999;
+        }
+
+        .celebration-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(20, 22, 26, 0.35);
+            backdrop-filter: blur(6px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+
+        .celebration-modal.active { opacity: 1; pointer-events: auto; }
+
+        .celebration-card {
+            background: #fff;
+            padding: 40px;
+            border-radius: var(--radius-xl);
+            text-align: center;
+            box-shadow: var(--shadow-card);
+            max-width: 360px;
+            width: 90%;
+            transform: scale(0.92);
+            transition: transform 0.4s var(--ease-spring);
+        }
+
+        .celebration-modal.active .celebration-card { transform: scale(1); }
+
+        .celebration-card h2 { font-size: 1.5rem; margin-bottom: 12px; }
+
+        .celebration-card p {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+
+        .celebration-card .submit-btn { width: 100%; justify-content: center; margin: 0; }
+
+        @media (max-width: 560px) {
+            .scenario-card { padding: 16px; }
+            .timeline { grid-template-columns: repeat(5, 1fr); gap: 2px; }
+            .step-label { font-size: 0.66rem; }
+            .step-sublabel { display: none; }
+            .step-badge { width: 32px; height: 32px; }
+            .predict-footer { flex-direction: column; align-items: stretch; }
+            .submit-btn { justify-content: center; margin-left: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="page">
+        <div class="scenario-card">
+
+            <!-- Header -->
+            <div class="scenario-header">
+                <div class="scenario-header-left">
+                    <div class="header-icon">🔬</div>
+                    <div class="header-copy">
+                        <h1>Osmosis in Red Onion Cells</h1>
+                        <p>Observe microscopic cellular changes when altering salt concentration.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Viewport / Animated Cell Stage -->
+            <div class="viewport-wrapper" id="viewport-wrapper">
+                <div class="cell-stage" id="cell-stage">
+                    <div class="cell-wall">
+                        <span class="cell-wall-label">Cell Wall</span>
+                    </div>
+                    <div class="membrane-blob" id="membrane-blob">
+                        <div class="vacuole-blob" id="vacuole-blob"></div>
+                        <div class="nucleus-dot"></div>
+                    </div>
+                    <div class="particle-layer" id="particle-layer"></div>
+                    <div class="water-wave-layer" id="water-wave-layer">
+                        <div class="water-wave wave-1"></div>
+                        <div class="water-wave wave-2"></div>
+                        <div class="water-wave wave-3"></div>
+                        <div class="ripple-ring r1"></div>
+                        <div class="ripple-ring r2"></div>
+                        <div class="ripple-ring r3"></div>
+                    </div>
+                </div>
+                <div class="viewport-scrim"></div>
+                <div class="viewport-center-controls">
+                    <button class="video-action-btn" id="main-action-btn">Predict first</button>
+                </div>
+            </div>
+
+            <!-- Timeline -->
+            <div class="timeline">
+                <div class="timeline-step active" id="step-1">
+                    <div class="step-badge">💧</div>
+                    <span class="step-label">Isotonic</span>
+                    <span class="step-sublabel">(Distilled Water)</span>
+                </div>
+                <div class="timeline-step" id="step-2">
+                    <div class="step-badge">🧂</div>
+                    <span class="step-label">Hypertonic</span>
+                    <span class="step-sublabel">(10% Salt Solution)</span>
+                </div>
+                <div class="timeline-step" id="step-3">
+                    <div class="step-badge">🥀</div>
+                    <span class="step-label">Plasmolyzed</span>
+                    <span class="step-sublabel">(Membrane Shrinks)</span>
+                </div>
+                <div class="timeline-step" id="step-4">
+                    <div class="step-badge">🌊</div>
+                    <span class="step-label">Rinse</span>
+                    <span class="step-sublabel">(Distilled Water)</span>
+                </div>
+                <div class="timeline-step" id="step-5">
+                    <div class="step-badge">🌱</div>
+                    <span class="step-label">Deplasmolyzed</span>
+                    <span class="step-sublabel">(Turgor Restored)</span>
+                </div>
+            </div>
+
+            <!-- Live Observation -->
+            <div class="observation-card">
+                <div class="observation-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                </div>
+                <div class="observation-copy">
+                    <div class="obs-title">Live Microscopic Observation</div>
+                    <div class="obs-text" id="live-observation">Cells are fully turgid with rigid cell walls pressing against membranes.</div>
+                </div>
+                <div class="step-pill" id="step-pill">Step 1 of 5</div>
+            </div>
+
+            <!-- Predict -->
+            <div class="predict-card" id="prediction-card">
+                <div class="predict-header">
+                    <div class="predict-icon">🤔</div>
+                    <div class="predict-title">Predict</div>
+                </div>
+                <div class="predict-question">What will happen to the cell membrane when high-concentration saltwater (10% NaCl) is added to the slide?</div>
+
+                <div class="prediction-options" id="prediction-options">
+                    <div class="option-row" data-answer="expand">
+                        <div class="radio"></div>
+                        <span class="option-label">Cell membrane expands and bursts the cell wall</span>
+                    </div>
+                    <div class="option-row" data-answer="shrink">
+                        <div class="radio"></div>
+                        <span class="option-label">Cell membrane shrinks away from the rigid cell wall</span>
+                    </div>
+                    <div class="option-row" data-answer="no_change">
+                        <div class="radio"></div>
+                        <span class="option-label">No visible change occurs in the cellular structure</span>
+                    </div>
+                </div>
+
+                <div class="prediction-feedback" id="prediction-feedback"></div>
+
+                <div class="predict-footer">
+                    <div class="predict-hint">
+                        <span>💡</span>
+                        <span>Think based on osmosis &ndash; water moves from lower solute concentration to higher solute concentration.</span>
+                    </div>
+                    <button class="submit-btn" id="submit-prediction-btn" disabled>
+                        Submit Prediction
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Explanation -->
+            <div class="explanation-card hidden" id="explanation-card">
+                <div class="explanation-header">
+                    <div class="explanation-icon">💡</div>
+                    <div class="explanation-title">Concept Unlocked</div>
+                </div>
+                <div class="explanation-text" id="explanation-text"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <canvas id="confetti-canvas"></canvas>
+
+    <div class="celebration-modal" id="celebration-modal">
+        <div class="celebration-card">
+            <h2>🎉 Lab Complete!</h2>
+            <p>You observed Plasmolysis and Deplasmolysis driven by Osmosis in plant cells.</p>
+            <button class="submit-btn" onclick="location.reload()">Replay Lab</button>
+        </div>
+    </div>
+
+    <script>
+        const States = {
+            ISOTONIC: 'ISOTONIC',
+            ADDING_SALT: 'ADDING_SALT',
+            PLASMOLYZED: 'PLASMOLYZED',
+            RINSING: 'RINSING',
+            RESTORED: 'RESTORED'
+        };
+
+        const StepOfFive = {
+            [States.ISOTONIC]: 1,
+            [States.ADDING_SALT]: 2,
+            [States.PLASMOLYZED]: 3,
+            [States.RINSING]: 4,
+            [States.RESTORED]: 5
+        };
+
+        class Timeline {
+            constructor() {
+                this.steps = {
+                    [States.ISOTONIC]: document.getElementById('step-1'),
+                    [States.ADDING_SALT]: document.getElementById('step-2'),
+                    [States.PLASMOLYZED]: document.getElementById('step-3'),
+                    [States.RINSING]: document.getElementById('step-4'),
+                    [States.RESTORED]: document.getElementById('step-5')
+                };
+                this.pill = document.getElementById('step-pill');
+            }
+
+            setActive(state) {
+                Object.values(this.steps).forEach(el => el.classList.remove('active', 'completed'));
+                const order = [States.ISOTONIC, States.ADDING_SALT, States.PLASMOLYZED, States.RINSING, States.RESTORED];
+                const currentIndex = order.indexOf(state);
+
+                order.forEach((s, idx) => {
+                    if (idx < currentIndex) this.steps[s].classList.add('completed');
+                });
+
+                if (this.steps[state]) this.steps[state].classList.add('active');
+                if (this.pill) this.pill.textContent = `Step ${StepOfFive[state]} of 5`;
+            }
+        }
+
+        class ObservationPanel {
+            constructor() {
+                this.textElement = document.getElementById('live-observation');
+            }
+
+            update(text, immediate = false) {
+                if (immediate) { this._setText(text); return; }
+                this.textElement.style.opacity = '0';
+                setTimeout(() => {
+                    this._setText(text);
+                    this.textElement.style.opacity = '1';
+                }, 350);
+            }
+
+            _setText(text) { this.textElement.innerHTML = text; }
+        }
+
+        class CellStage {
+            constructor() {
+                this.membrane = document.getElementById('membrane-blob');
+                this.particleLayer = document.getElementById('particle-layer');
+                this.waveLayer = document.getElementById('water-wave-layer');
+            }
+
+            reset() {
+                this.membrane.classList.remove('plasmolyzed');
+                this.waveLayer.classList.remove('active');
+                this.particleLayer.innerHTML = '';
+            }
+
+            spawnSalt(count = 16) {
+                for (let i = 0; i < count; i++) {
+                    const p = document.createElement('div');
+                    p.className = 'salt-particle';
+                    p.style.left = (8 + Math.random() * 84) + '%';
+                    p.style.animationDelay = (Math.random() * 0.7) + 's';
+                    this.particleLayer.appendChild(p);
+                    // Updated to account for longer salt animation
+                    setTimeout(() => p.remove(), 2500); 
+                }
+            }
+
+            spawnWater(direction, count = 12) {
+                for (let i = 0; i < count; i++) {
+                    const p = document.createElement('div');
+                    p.className = 'water-particle ' + direction;
+                    const angle = Math.random() * Math.PI * 2;
+                    const dist = 70 + Math.random() * 55;
+                    const dx = Math.cos(angle) * dist;
+                    const dy = Math.sin(angle) * dist;
+                    p.style.setProperty('--dx', dx.toFixed(1) + 'px');
+                    p.style.setProperty('--dy', dy.toFixed(1) + 'px');
+                    p.style.animationDelay = (Math.random() * 0.4) + 's';
+                    this.particleLayer.appendChild(p);
+                    // Updated to account for longer water animation
+                    setTimeout(() => p.remove(), 2600);
+                }
+            }
+
+            plasmolyze() {
+                this.membrane.classList.add('plasmolyzed');
+            }
+
+            deplasmolyze() {
+                this.membrane.classList.remove('plasmolyzed');
+            }
+
+            playRinseWaves() {
+                this.waveLayer.classList.add('active');
+                setTimeout(() => this.waveLayer.classList.remove('active'), 2500);
+            }
+        }
+
+        class PredictionSystem {
+            constructor(onPredicted, onSubmitted) {
+                this.card = document.getElementById('prediction-card');
+                this.options = document.querySelectorAll('.option-row');
+                this.feedback = document.getElementById('prediction-feedback');
+                this.submitBtn = document.getElementById('submit-prediction-btn');
+
+                this.hasSelected = false;
+                this.hasSubmitted = false;
+                this.selectedAnswer = null;
+
+                this.onPredictedCallback = onPredicted;
+                this.onSubmittedCallback = onSubmitted;
+
+                this.options.forEach(row => {
+                    row.addEventListener('click', () => this.handleSelection(row));
+                });
+                this.submitBtn.addEventListener('click', () => this.handleSubmit());
+            }
+
+            handleSelection(row) {
+                if (this.hasSubmitted) return;
+                this.hasSelected = true;
+                this.selectedAnswer = row.getAttribute('data-answer');
+
+                this.options.forEach(r => r.classList.remove('selected'));
+                row.classList.add('selected');
+                this.submitBtn.disabled = false;
+
+                if (this.onPredictedCallback) this.onPredictedCallback();
+            }
+
+            handleSubmit() {
+                if (!this.hasSelected || this.hasSubmitted) return;
+                this.hasSubmitted = true;
+
+                this.options.forEach(r => r.classList.add('locked'));
+                this.submitBtn.disabled = true;
+
+                if (this.onSubmittedCallback) this.onSubmittedCallback();
+            }
+
+            revealResult() {
+                const isCorrect = this.selectedAnswer === 'shrink';
+
+                this.options.forEach(row => {
+                    if (row.getAttribute('data-answer') === 'shrink') {
+                        row.classList.add('correct');
+                        row.classList.remove('selected');
+                    } else if (row.classList.contains('selected')) {
+                        row.classList.add('wrong');
+                    }
+                });
+
+                this.feedback.style.display = 'block';
+                if (isCorrect) {
+                    this.feedback.style.color = 'var(--green)';
+                    this.feedback.innerHTML = '✨ Correct! Water leaves the cell vacuole toward the hypertonic solution.';
+                } else {
+                    this.feedback.style.color = 'var(--red)';
+                    this.feedback.innerHTML = 'Not quite! Hypertonic solutions pull water out, causing the membrane to shrink.';
+                }
+            }
+        }
+
+        class Confetti {
+            constructor() {
+                this.canvas = document.getElementById('confetti-canvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.particles = [];
+                this.colors = ['#7c5cff', '#1fa971', '#f4a51f', '#ff3b30', '#c026d3'];
+                this.isActive = false;
+                this.resize();
+                window.addEventListener('resize', () => this.resize());
+            }
+
+            resize() {
+                this.canvas.width = window.innerWidth;
+                this.canvas.height = window.innerHeight;
+            }
+
+            start() {
+                this.isActive = true;
+                for (let i = 0; i < 100; i++) {
+                    this.particles.push({
+                        x: Math.random() * this.canvas.width,
+                        y: Math.random() * this.canvas.height - this.canvas.height,
+                        w: Math.random() * 10 + 5,
+                        h: Math.random() * 10 + 5,
+                        vx: Math.random() * 4 - 2,
+                        vy: Math.random() * 3 + 2,
+                        c: this.colors[Math.floor(Math.random() * this.colors.length)],
+                        rot: Math.random() * 360,
+                        rotS: Math.random() * 5 - 2.5
+                    });
+                }
+                this.animate();
+            }
+
+            animate() {
+                if (!this.isActive) return;
+                requestAnimationFrame(() => this.animate());
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                this.particles.forEach(p => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.rot += p.rotS;
+                    this.ctx.save();
+                    this.ctx.translate(p.x, p.y);
+                    this.ctx.rotate(p.rot * Math.PI / 180);
+                    this.ctx.fillStyle = p.c;
+                    this.ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+                    this.ctx.restore();
+                });
+            }
+        }
+
+        class LessonController {
+            constructor() {
+                this.state = States.ISOTONIC;
+
+                this.timeline = new Timeline();
+                this.observation = new ObservationPanel();
+                this.confetti = new Confetti();
+                this.cellStage = new CellStage();
+
+                this.mainBtn = document.getElementById('main-action-btn');
+                this.explanationCard = document.getElementById('explanation-card');
+                this.explanationText = document.getElementById('explanation-text');
+
+                this.prediction = new PredictionSystem(
+                    () => {},
+                    () => {
+                        // Prediction is submitted! Make the action button available.
+                        this.mainBtn.disabled = false;
+                        this.mainBtn.textContent = 'ADD 10% SALT';
+                        this.mainBtn.classList.remove('btn-rinse', 'hidden');
+                        
+                        // Scroll up smoothly to center the animation stage
+                        document.getElementById('viewport-wrapper').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        
+                        // Removed this.handleActionBtn() auto-trigger so the user controls when to start it.
+                    }
+                );
+
+                this.setupInitialState();
+                this.mainBtn.addEventListener('click', () => this.handleActionBtn());
+            }
+
+            setupInitialState() {
+                this.timeline.setActive(States.ISOTONIC);
+                this.cellStage.reset();
+                this.observation.update('Cells are in distilled water (Isotonic). Vacuole is full and cytoplasm presses against the rigid cell wall.', true);
+                this.mainBtn.disabled = true;
+                this.mainBtn.textContent = 'Predict first';
+                this.mainBtn.classList.remove('btn-rinse', 'hidden');
+            }
+
+            handleActionBtn() {
+                if (!this.prediction.hasSubmitted) {
+                    const card = document.getElementById('prediction-card');
+                    card.classList.remove('shake');
+                    void card.offsetWidth;
+                    card.classList.add('shake');
+                    return;
+                }
+
+                if (this.state === States.ISOTONIC) {
+                    this.transitionToAddingSalt();
+                } else if (this.state === States.PLASMOLYZED) {
+                    this.transitionToRinsing();
+                }
+            }
+
+            transitionToAddingSalt() {
+                this.state = States.ADDING_SALT;
+                this.timeline.setActive(States.ADDING_SALT);
+                this.mainBtn.classList.add('hidden');
+
+                this.observation.update('10% Salt solution added. Hypertonic environment established...');
+
+                // Salt crystals fall onto the slide
+                this.cellStage.spawnSalt();
+
+                // Delay the membrane shrinkage until salt finishes falling
+                setTimeout(() => {
+                    this.cellStage.plasmolyze();
+                    this.cellStage.spawnWater('out');
+                    
+                    // Delay the next step until the slower 2.5s shrinking animation finishes
+                    setTimeout(() => {
+                        this.transitionToPlasmolyzed();
+                    }, 2500); 
+
+                }, 2000); 
+            }
+
+            transitionToPlasmolyzed() {
+                this.state = States.PLASMOLYZED;
+                this.timeline.setActive(States.PLASMOLYZED);
+
+                this.prediction.revealResult();
+                this.observation.update('<strong>Plasmolysis observed!</strong> Water exited the cell vacuole via osmosis, causing the plasma membrane to shrink away from the cell wall.');
+
+                this.showExplanation('<strong>Hypertonic Response (Plasmolysis):</strong> Because the extracellular salt concentration is higher than inside the cell, water moves out of the vacuole down its water potential gradient by osmosis.');
+
+                setTimeout(() => {
+                    this.mainBtn.disabled = false;
+                    this.mainBtn.textContent = 'RINSE WITH DISTILLED WATER';
+                    this.mainBtn.classList.add('btn-rinse');
+                    this.mainBtn.classList.remove('hidden');
+                }, 1500);
+            }
+
+            transitionToRinsing() {
+                this.state = States.RINSING;
+                this.timeline.setActive(States.RINSING);
+                this.mainBtn.classList.add('hidden');
+
+                this.observation.update('Flushing slide with distilled water (Hypotonic environment)...');
+
+                // Waves of water sweep across the slide
+                this.cellStage.playRinseWaves();
+
+                // Wait for the water waves to sweep across before swelling back up
+                setTimeout(() => {
+                    this.cellStage.deplasmolyze();
+                    this.cellStage.spawnWater('in');
+                    
+                    // Wait for the deplasmolysis animation to finish 
+                    setTimeout(() => {
+                        this.transitionToRestored();
+                    }, 2500);
+
+                }, 2000);
+            }
+
+            transitionToRestored() {
+                this.state = States.RESTORED;
+                this.timeline.setActive(States.RESTORED);
+
+                this.observation.update('<strong>Deplasmolysis complete!</strong> Water re-entered the cell, restoring vacuole volume and turgor pressure against the cell wall.');
+
+                this.showExplanation('<strong>Hypotonic Response (Deplasmolysis):</strong> Pure water creates a hypotonic environment, forcing water back into the cell via osmosis until internal turgor pressure stabilizes.');
+
+                setTimeout(() => {
+                    this.confetti.start();
+                    document.getElementById('celebration-modal').classList.add('active');
+                }, 1800);
+            }
+
+            showExplanation(htmlText) {
+                this.explanationCard.classList.remove('hidden');
+                void this.explanationCard.offsetWidth;
+                this.explanationCard.classList.add('fade-in');
+                this.explanationText.innerHTML = htmlText;
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            new LessonController();
+        });
+    </script>
+</body>
+</html>

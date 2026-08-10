@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>State of Matter | Wisdawn</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --wis-blue: #2D5FF4;
+  --wis-blue-dark: #2454D9;
+  --wis-text: #10172A;
+  --wis-text-secondary: #64748B;
+  --wis-text-muted: #94A3B8;
+  --wis-white: #FFFFFF;
+  --wis-blue-soft: #F3F7FF;
+  --wis-neutral-soft: #F5F7FB;
+  --wis-gold: #F4C557;
+  --wis-green: #91CD23;
+  --wis-red: #EF5965;
+  --wis-border: #E6EBF2;
+  --wis-border-soft: #EEF2F7;
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 20px;
+  --radius-xl: 24px;
+  --radius-pill: 999px;
+  --font-display: 'Nunito Sans', sans-serif;
+  --font-body: 'Inter', sans-serif;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  min-height: 100vh;
+  min-height: 100dvh;
+  font-family: var(--font-body);
+  color: var(--wis-text);
+  background: var(--wis-neutral-soft);
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;
+}
+button { font-family: inherit; cursor: pointer; }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--wis-blue); outline-offset: 2px; }
+
+.app {
+  max-width: 520px;
+  margin: 0 auto;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 16px 32px;
+}
+
+/* ---- header ---- */
+.wis-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 4px 16px;
+  margin-bottom: 8px;
+}
+.wis-header .mark {
+  width: 44px; height: 44px; border-radius: 12px;
+  background: var(--wis-blue-soft);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.wis-header .titles { flex: 1; min-width: 0; }
+.wis-header h1 {
+  font-family: var(--font-display);
+  font-size: 20px; font-weight: 800; margin: 0; line-height: 1.15; color: var(--wis-text);
+  letter-spacing: -0.01em;
+}
+.wis-header .eyebrow {
+  font-size: 11.5px; font-weight: 700; color: var(--wis-blue);
+  text-transform: uppercase; letter-spacing: 0.04em;
+  margin-bottom: 2px;
+}
+.reset-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 40px; height: 40px; border-radius: var(--radius-sm);
+  background: var(--wis-white); border: 1px solid var(--wis-border);
+  color: var(--wis-text-secondary);
+  box-shadow: 0 2px 4px rgba(16,23,42,0.02);
+  transition: all .18s;
+}
+.reset-btn:hover { background: var(--wis-neutral-soft); color: var(--wis-text); }
+.reset-btn svg { width: 18px; height: 18px; }
+
+/* ---- stage ---- */
+.stage-wrap {
+  position: relative;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
+  border: 1px solid var(--wis-border);
+  box-shadow: 0 4px 16px rgba(16,23,42,0.04);
+}
+#stageCanvas { display: block; width: 100%; height: auto; }
+
+.phase-badge {
+  position: absolute; top: 14px; left: 14px;
+  display: flex; align-items: center; gap: 7px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid var(--wis-border-soft);
+  padding: 6px 14px 6px 10px;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-display); font-weight: 800; font-size: 13.5px;
+  color: var(--wis-text);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 2px 8px rgba(16,23,42,0.06);
+}
+.phase-badge .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--wis-blue); transition: background .5s ease; }
+
+.temp-badge {
+  position: absolute; top: 14px; right: 14px;
+  background: var(--wis-white);
+  border: 1px solid var(--wis-border);
+  color: var(--wis-blue);
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-display);
+  font-size: 16px; font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 2px 8px rgba(16,23,42,0.06);
+}
+
+/* ---- one-line explainer ---- */
+.explainer {
+  margin-top: 16px;
+  font-size: 14px;
+  color: var(--wis-text-secondary);
+  line-height: 1.5;
+  text-align: center;
+  min-height: 42px;
+  padding: 0 8px;
+  transition: opacity .25s ease;
+  font-weight: 500;
+}
+.explainer b { color: var(--wis-text); font-weight: 700; }
+
+/* ---- slider card ---- */
+.card {
+  background: var(--wis-white);
+  border: 1px solid var(--wis-border);
+  border-radius: var(--radius-xl);
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(16,23,42,0.04);
+}
+.slider-card { margin-top: 16px; }
+.slider-top {
+  display: flex; align-items: baseline; justify-content: space-between;
+  margin-bottom: 12px;
+}
+.slider-name { font-family: var(--font-display); font-weight: 800; font-size: 15px; color: var(--wis-text); }
+.slider-value { font-family: var(--font-display); font-weight: 800; font-size: 24px; color: var(--wis-blue); font-variant-numeric: tabular-nums; }
+.slider-value .u { font-size: 13px; color: var(--wis-text-muted); font-weight: 700; margin-left: 2px; }
+
+input[type=range] {
+  -webkit-appearance: none; appearance: none;
+  width: 100%; height: 44px; background: transparent; margin: 0; cursor: pointer;
+}
+input[type=range]::-webkit-slider-runnable-track {
+  height: 10px; border-radius: var(--radius-pill);
+  background: linear-gradient(90deg, #4da3ff 0%, #7fc4ff 22%, #cfe7ff 46%, #F4C557 68%, #ffab6b 84%, #EF5965 100%);
+  border: 1px solid var(--wis-border-soft);
+}
+input[type=range]::-moz-range-track {
+  height: 10px; border-radius: var(--radius-pill);
+  background: linear-gradient(90deg, #4da3ff 0%, #7fc4ff 22%, #cfe7ff 46%, #F4C557 68%, #ffab6b 84%, #EF5965 100%);
+  border: 1px solid var(--wis-border-soft);
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--wis-white); border: 2.5px solid var(--wis-blue);
+  box-shadow: 0 2px 8px rgba(16,23,42,0.12);
+  margin-top: -10px;
+  transition: transform .12s ease;
+}
+input[type=range]::-webkit-slider-thumb:active { transform: scale(1.1); }
+input[type=range]::-moz-range-thumb {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--wis-white); border: 2.5px solid var(--wis-blue);
+  box-shadow: 0 2px 8px rgba(16,23,42,0.12);
+}
+.marker-row { display: flex; justify-content: space-between; font-size: 12px; color: var(--wis-text-muted); font-weight: 700; margin-top: 2px; padding: 0 2px; }
+
+/* ---- pressure toggle row ---- */
+.pressure-row {
+  margin-top: 16px;
+  display: flex; align-items: center; justify-content: space-between;
+  border-top: 1px solid var(--wis-border-soft);
+  padding-top: 16px;
+}
+.pressure-label { font-size: 13.5px; color: var(--wis-text-secondary); font-weight: 700; }
+.pressure-chips { display: flex; gap: 8px; }
+.pchip {
+  border: 1px solid var(--wis-border); background: var(--wis-white);
+  padding: 8px 14px; border-radius: var(--radius-pill);
+  font-size: 13px; font-weight: 700; color: var(--wis-text-secondary);
+  transition: all .18s ease;
+}
+.pchip.active { background: var(--wis-blue-soft); color: var(--wis-blue-dark); border-color: transparent; }
+
+/* ---- timeline strip ---- */
+.timeline {
+  margin-top: 16px;
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--wis-white); border: 1px solid var(--wis-border); border-radius: var(--radius-lg);
+  padding: 16px 12px;
+  box-shadow: 0 2px 8px rgba(16,23,42,0.04);
+}
+.tl-step {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px;
+}
+.tl-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--wis-border); transition: all .4s ease; }
+.tl-txt { font-size: 11px; font-weight: 700; color: var(--wis-text-muted); transition: color .4s ease; }
+.tl-step.active .tl-dot { background: var(--wis-blue); transform: scale(1.3); box-shadow: 0 0 0 4px var(--wis-blue-soft); }
+.tl-step.active .tl-txt { color: var(--wis-text); }
+.tl-line { flex: 0 0 auto; width: 16px; height: 2px; background: var(--wis-border-soft); margin-top: -18px; }
+
+/* ---- controls ---- */
+.play-row {
+  margin-top: 16px;
+  display: flex; gap: 10px;
+}
+.play-btn {
+  flex: 1;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  background: var(--wis-white); border: 1px solid var(--wis-border);
+  padding: 14px; border-radius: var(--radius-md);
+  font-weight: 700; font-size: 14px; color: var(--wis-text);
+  box-shadow: 0 2px 4px rgba(16,23,42,0.02);
+  transition: all .18s ease;
+}
+.play-btn svg { width: 18px; height: 18px; stroke: var(--wis-text-secondary); }
+.play-btn.active { background: var(--wis-blue-soft); color: var(--wis-blue-dark); border-color: transparent; box-shadow: none; }
+.play-btn.active svg { stroke: var(--wis-blue-dark); }
+
+.foot {
+  text-align: center; margin-top: 24px; color: var(--wis-text-muted); font-size: 12px; font-weight: 600;
+}
+</style>
+</head>
+<body>
+
+<div class="app" id="app">
+
+  <header class="wis-header">
+    <div class="mark">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M9 2H15" stroke="#2D5FF4" stroke-width="2" stroke-linecap="round"/>
+        <path d="M10 2V8.5L4.8 17.2C4.1 18.4 5 20 6.4 20H17.6C19 20 19.9 18.4 19.2 17.2L14 8.5V2" stroke="#2D5FF4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M7 15.5H17" stroke="#2D5FF4" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="titles">
+      <div class="eyebrow">Interactive Model</div>
+      <h1>State of Matter</h1>
+    </div>
+    <button class="reset-btn" id="resetBtn" aria-label="Reset">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 1 2.6 6.36M3 12V6m0 6h6"/></svg>
+    </button>
+  </header>
+
+  <div class="stage-wrap">
+    <div class="phase-badge"><span class="dot" id="phaseDot"></span><span id="phaseLabel">Ice</span></div>
+    <div class="temp-badge" id="tempBig">-20°</div>
+    <canvas id="stageCanvas" width="720" height="720" aria-label="Water changing state"></canvas>
+  </div>
+
+  <div class="explainer" id="explainer">Drag the slider below — water is frozen solid at <b>-20°C</b>.</div>
+
+  <div class="card slider-card">
+    <div class="slider-top">
+      <span class="slider-name">🌡️ Temperature</span>
+      <span class="slider-value"><span id="tempVal">-20</span><span class="u">°C</span></span>
+    </div>
+    <input type="range" id="tempSlider" min="-20" max="150" step="1" value="-20" aria-label="Temperature">
+    <div class="marker-row"><span>-20°</span><span>0°</span><span>100°</span><span>150°</span></div>
+
+    <div class="pressure-row">
+      <span class="pressure-label">Pressure</span>
+      <div class="pressure-chips">
+        <button class="pchip" data-p="0.5">Low</button>
+        <button class="pchip active" data-p="1">Normal</button>
+        <button class="pchip" data-p="2">High</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="timeline" id="timeline"><!-- filled by JS --></div>
+
+  <div class="play-row">
+    <button class="play-btn" id="pauseBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>
+      Pause animation
+    </button>
+  </div>
+
+  <div class="foot">Wisdawn Interactive Lab · simplified model for quick exploration</div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+function smoothstep(e0,e1,x){const t=clamp((x-e0)/(e1-e0),0,1);return t*t*(3-2*t);}
+function lerp(a,b,t){return a+(b-a)*t;}
+
+/* ---- tiny physics: melting/boiling point shift with pressure ---- */
+function boilingPoint(pAtm){
+  const R=8.314, Hvap=40660, T1=373.15;
+  const invT2=(1/T1)-(R/Hvap)*Math.log(pAtm/1);
+  return (1/invT2)-273.15;
+}
+function meltingPoint(pAtm){ return -0.0074*(pAtm-1); }
+
+function phaseFractions(tempC,pAtm){
+  const mp=meltingPoint(pAtm), bp=boilingPoint(pAtm);
+  const meltWidth=1.6, boilStart=bp-5, boilFull=bp+9;
+  let solid=0,liquid=0,gas=0;
+  if(tempC<=mp) solid=1;
+  else if(tempC<mp+meltWidth){ liquid=(tempC-mp)/meltWidth; solid=1-liquid; }
+  else if(tempC<=boilStart) liquid=1;
+  else if(tempC<boilFull){ gas=smoothstep(boilStart,boilFull,tempC); liquid=1-gas; }
+  else gas=1;
+  const simmer=clamp((tempC-boilStart)/(bp-boilStart+0.0001),0,1);
+  return {solid,liquid,gas,mp,bp,boilStart,simmer};
+}
+
+function roundRectPath(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
+}
+
+/* ============================================================
+   STAGE RENDERER — Adjusted for Wisdawn Light Theme
+   ============================================================ */
+class Stage{
+  constructor(canvas){
+    this.canvas=canvas; this.ctx=canvas.getContext('2d');
+    this.w=canvas.width; this.h=canvas.height;
+    this.bubbles=[];
+    this.steam=[];
+    this.rippleSeed=Math.random()*1000;
+    this.fillFracSmooth=0.06;
+    for(let i=0;i<50;i++){
+      this.steam.push({
+        x:this.w*0.5+(Math.random()-0.5)*this.w*0.7,
+        y:this.h*(0.15+Math.random()*0.7),
+        r:16+Math.random()*36,
+        vy:-(0.2+Math.random()*0.4),
+        vx:(Math.random()-0.5)*0.3,
+        phase:Math.random()*Math.PI*2
+      });
+    }
+  }
+
+  render(state,t,dtMs){
+    const ctx=this.ctx, w=this.w, h=this.h;
+    ctx.clearRect(0,0,w,h);
+    const padX=w*0.14, padTop=h*0.18, padBot=h*0.09;
+    const x=padX,y=padTop,cw=w-2*padX,ch=h-padTop-padBot;
+
+    this.vesselBack(ctx,x,y,cw,ch);
+
+    const {solid,liquid,gas,simmer}=state.frac;
+    const fillTarget=clamp(solid*0.62+liquid*0.86-gas*0.55,0.04,0.9);
+    const ease=1-Math.pow(0.001,(dtMs||16)/1000);
+    this.fillFracSmooth=lerp(this.fillFracSmooth,fillTarget,clamp(ease*2.2,0,1));
+    const topY=y+ch-ch*this.fillFracSmooth;
+
+    if(liquid>0.001 || (solid>0 && solid<1)) this.water(ctx,x,y,cw,ch,topY,y+ch,t,simmer);
+    if(solid>0.002) this.ice(ctx,x,y,cw,ch,solid,t,state.tempC);
+    if(gas>0.15) this.steamCloud(ctx,x,y,cw,ch,gas,t);
+
+    this.glass(ctx,x,y,cw,ch);
+  }
+
+  vesselBack(ctx,x,y,w,h){
+    ctx.save();
+    roundRectPath(ctx,x,y,w,h,30);
+    const g=ctx.createLinearGradient(0,y,0,y+h);
+    g.addColorStop(0,'rgba(230, 235, 242, 0.4)');
+    g.addColorStop(1,'rgba(243, 247, 255, 0.8)');
+    ctx.fillStyle=g; ctx.fill();
+    ctx.restore();
+  }
+
+  glass(ctx,x,y,w,h){
+    ctx.save();
+    roundRectPath(ctx,x,y,w,h,30);
+    ctx.lineWidth=3; ctx.strokeStyle='rgba(148, 163, 184, 0.15)'; ctx.stroke();
+    ctx.save();
+    roundRectPath(ctx,x,y,w,h,30); ctx.clip();
+    const sheen=ctx.createLinearGradient(x,y,x+w*0.35,y+h);
+    sheen.addColorStop(0,'rgba(255,255,255,0.6)');
+    sheen.addColorStop(0.3,'rgba(255,255,255,0.1)');
+    sheen.addColorStop(1,'rgba(255,255,255,0)');
+    ctx.fillStyle=sheen; ctx.fillRect(x,y,w*0.4,h);
+    ctx.restore();
+    ctx.restore();
+  }
+
+  water(ctx,x,y,w,h,topY,bottomY,t,simmer){
+    ctx.save();
+    roundRectPath(ctx,x,y,w,h,30); ctx.clip();
+
+    const amp=3+simmer*4;
+    ctx.beginPath();
+    ctx.moveTo(x,bottomY+4); ctx.lineTo(x,topY);
+    const steps=26;
+    for(let i=0;i<=steps;i++){
+      const px=x+(w*i/steps);
+      const py=topY+Math.sin((i/steps)*Math.PI*4+t*0.0016+this.rippleSeed)*amp
+                    +Math.sin((i/steps)*Math.PI*9+t*0.003)*amp*0.35;
+      ctx.lineTo(px,py);
+    }
+    ctx.lineTo(x+w,bottomY+4); ctx.closePath();
+    const wg=ctx.createLinearGradient(0,topY,0,bottomY);
+    wg.addColorStop(0,'rgba(45, 95, 244, 0.55)');
+    wg.addColorStop(0.14,'rgba(36, 84, 217, 0.65)');
+    wg.addColorStop(1,'rgba(16, 23, 42, 0.35)');
+    ctx.fillStyle=wg; ctx.fill();
+
+    if(simmer>0.02){
+      const target=Math.round(simmer*40);
+      while(this.bubbles.length<target){
+        this.bubbles.push({x:x+w*0.12+Math.random()*w*0.76,y:bottomY-Math.random()*10,r:1.6+Math.random()*3,v:0.6+Math.random()*1.1});
+      }
+      if(this.bubbles.length>target) this.bubbles.length=target;
+      ctx.fillStyle='rgba(255,255,255,0.85)';
+      for(const b of this.bubbles){
+        b.y-=b.v*(0.6+simmer);
+        if(b.y<topY){b.y=bottomY-Math.random()*6;b.x=x+w*0.12+Math.random()*w*0.76;}
+        ctx.beginPath(); ctx.arc(b.x,b.y,b.r,0,Math.PI*2); ctx.fill();
+      }
+    } else { this.bubbles.length=Math.max(0,this.bubbles.length-2); }
+    ctx.restore();
+  }
+
+  ice(ctx,x,y,w,h,solidFrac,t,tempC){
+    ctx.save();
+    const scale=0.55+solidFrac*0.45;
+    const jitter=tempC<0?clamp((tempC+20)/20,0,1)*1.6:0;
+    const baseSize=Math.min(w,h)*0.30*scale;
+    const gap=baseSize*0.28;
+    const totalW=baseSize*3+gap*2;
+    const startX=x+w/2-totalW/2;
+    const restY=y+h*0.42-baseSize*(1-scale)*0.3;
+    for(let i=0;i<3;i++){
+      const jx=Math.sin(t*0.02+i*11)*jitter;
+      const jy=Math.cos(t*0.023+i*7)*jitter*0.6;
+      const cx=startX+i*(baseSize+gap)+baseSize/2+jx;
+      const cy=restY+baseSize/2+jy+Math.sin(t*0.0006+i)*2*(1-solidFrac);
+      this.cube(ctx,cx,cy,baseSize*(0.72+0.28*solidFrac),t,i,solidFrac,tempC);
+    }
+    ctx.restore();
+  }
+
+  cube(ctx,cx,cy,size,t,idx,solidFrac,tempC){
+    const half=size/2;
+    const melt=clamp(1-solidFrac,0,1);
+    const rTop=6+melt*half*0.75;
+    ctx.save(); ctx.translate(cx,cy);
+
+    ctx.save();
+    ctx.beginPath(); ctx.ellipse(0,half*0.92,half*0.9,half*0.22,0,0,Math.PI*2);
+    ctx.fillStyle='rgba(16,23,42,0.15)'; ctx.fill();
+    ctx.restore();
+
+    roundRectPath(ctx,-half,-half,size,size,rTop);
+    const grad=ctx.createLinearGradient(-half,-half,half,half);
+    grad.addColorStop(0,'#ffffff'); grad.addColorStop(0.45,'#dbeafe'); grad.addColorStop(1,'#93c5fd');
+    ctx.fillStyle=grad; ctx.fill();
+
+    ctx.save();
+    roundRectPath(ctx,-half,-half,size,size,rTop); ctx.clip();
+    const core=ctx.createRadialGradient(-half*0.2,-half*0.3,size*0.05,0,0,size*0.75);
+    core.addColorStop(0,'rgba(255,255,255,0.9)');
+    core.addColorStop(0.5,'rgba(170,210,245,0.4)');
+    core.addColorStop(1,'rgba(70,120,180,0.25)');
+    ctx.fillStyle=core; ctx.fillRect(-half,-half,size,size);
+
+    const frostAmt=clamp(1-((tempC+20)/20),0,1);
+    if(frostAmt>0.02){
+      ctx.fillStyle=`rgba(255,255,255,${0.7*frostAmt})`;
+      for(let i=0;i<12;i++){
+        const fx=(Math.sin(i*12.9+idx)*0.5+0.5)*size-half;
+        const fy=(Math.cos(i*7.7+idx)*0.5+0.5)*size-half;
+        ctx.beginPath(); ctx.arc(fx,fy,0.8+Math.random()*0.6,0,Math.PI*2); ctx.fill();
+      }
+    }
+    ctx.restore();
+
+    ctx.save();
+    roundRectPath(ctx,-half,-half,size,size,rTop); ctx.clip();
+    const sheen=ctx.createLinearGradient(-half,-half,-half+size*0.5,-half+size*0.5);
+    sheen.addColorStop(0,'rgba(255,255,255,0.95)'); sheen.addColorStop(1,'rgba(255,255,255,0)');
+    ctx.fillStyle=sheen; ctx.fillRect(-half,-half,size*0.55,size*0.55);
+    ctx.restore();
+
+    roundRectPath(ctx,-half,-half,size,size,rTop);
+    ctx.lineWidth=1.2; ctx.strokeStyle='rgba(255,255,255,0.9)'; ctx.stroke();
+
+    if(melt>0.02 && melt<0.98){
+      ctx.fillStyle='rgba(140,195,245,0.95)';
+      for(let i=0;i<3;i++){
+        const dx=-half*0.6+i*half*0.6;
+        const dy=half*0.7+(Math.sin(t*0.004+i+idx)*0.5+0.5)*half*0.5;
+        ctx.beginPath(); ctx.ellipse(dx,dy,2.4,3.6,0,0,Math.PI*2); ctx.fill();
+      }
+    }
+    ctx.restore();
+  }
+
+  steamCloud(ctx,x,y,w,h,gasFrac,t){
+    ctx.save();
+    roundRectPath(ctx,x,y,w,h,30); ctx.clip();
+    for(const p of this.steam){
+      p.y+=p.vy*(0.6+gasFrac*1.4);
+      p.x+=p.vx+Math.sin(t*0.001+p.phase)*0.3;
+      p.phase+=0.01;
+      if(p.y<y-10){p.y=y+h*0.35+Math.random()*h*0.3;p.x=x+Math.random()*w;}
+      const alpha=0.14*gasFrac+0.08*Math.sin(p.phase)*gasFrac;
+      ctx.beginPath(); ctx.fillStyle=`rgba(148,163,184,${clamp(alpha*1.6,0,0.45)})`;
+      ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill();
+    }
+    ctx.restore();
+  }
+}
+
+/* ============================================================
+   APP
+   ============================================================ */
+class App{
+  constructor(){
+    this.targetTemp=-20;
+    this.temp=-20;
+    this.pressure=1;
+    this.paused=false;
+    this.lastT=performance.now();
+
+    this.canvas=document.getElementById('stageCanvas');
+    this.stage=new Stage(this.canvas);
+
+    this.buildTimeline();
+    this.bind();
+    this.applyReadouts();
+    requestAnimationFrame(this.loop.bind(this));
+  }
+
+  buildTimeline(){
+    const steps=[['Solid','solid'],['Melting','melting'],['Liquid','liquid'],['Boiling','boiling'],['Gas','gas']];
+    const el=document.getElementById('timeline');
+    el.innerHTML=steps.map((s,i)=>
+      `<div class="tl-step" data-key="${s[1]}"><div class="tl-dot"></div><div class="tl-txt">${s[0]}</div></div>`
+      +(i<steps.length-1?'<div class="tl-line"></div>':'')
+    ).join('');
+  }
+
+  bind(){
+    const tempSlider=document.getElementById('tempSlider');
+    tempSlider.addEventListener('input',e=>{
+      this.targetTemp=parseFloat(e.target.value);
+    });
+
+    document.querySelectorAll('.pchip').forEach(chip=>{
+      chip.addEventListener('click',()=>{
+        document.querySelectorAll('.pchip').forEach(c=>c.classList.remove('active'));
+        chip.classList.add('active');
+        this.pressure=parseFloat(chip.dataset.p);
+      });
+    });
+
+    document.getElementById('resetBtn').addEventListener('click',()=>{
+      this.targetTemp=-20; this.pressure=1; this.paused=false;
+      tempSlider.value=-20;
+      document.querySelectorAll('.pchip').forEach(c=>c.classList.toggle('active',c.dataset.p==='1'));
+      document.getElementById('pauseBtn').classList.remove('active');
+    });
+
+    document.getElementById('pauseBtn').addEventListener('click',()=>{
+      this.paused=!this.paused;
+      document.getElementById('pauseBtn').classList.toggle('active',this.paused);
+    });
+  }
+
+  applyReadouts(){
+    document.getElementById('tempVal').textContent=Math.round(this.targetTemp);
+    document.getElementById('tempBig').textContent=(this.temp>0?'+':'')+Math.round(this.temp)+'°';
+
+    const frac=phaseFractions(this.temp,this.pressure);
+    let label='Solid Ice',dot='var(--wis-blue)',explain='';
+    if(frac.solid>=0.999){ label='Solid Ice'; dot='var(--wis-blue)'; explain=`Water is frozen solid at <b>${Math.round(this.temp)}°C</b>. Molecules are locked in place.`; }
+    else if(frac.solid>0){ label='Melting'; dot='var(--wis-mint)'; explain=`It's <b>melting</b> — the ice is turning to liquid right now.`; }
+    else if(frac.gas===0){ label='Liquid Water'; dot='var(--wis-blue)'; explain=`Water is <b>liquid</b> — molecules flow freely past each other.`; }
+    else if(frac.gas<0.999 && this.temp<frac.bp+0.01){ label=this.temp>=frac.boilStart?'Boiling':'Liquid Water'; dot='var(--wis-gold)'; explain=this.temp>=frac.boilStart?`It's <b>boiling</b> — bubbles of steam are escaping fast.`:`Water is <b>liquid</b>, warming toward boiling.`; }
+    else if(frac.gas<0.999){ label='Turning to Steam'; dot='var(--wis-gold)'; explain=`Water is <b>vaporizing</b> into steam.`; }
+    else { label='Steam / Gas'; dot='var(--wis-red)'; explain=`Water is now <b>steam</b> — molecules fly apart freely.`; }
+
+    document.getElementById('phaseLabel').textContent=label;
+    document.getElementById('phaseDot').style.background=dot;
+    document.getElementById('explainer').innerHTML=explain;
+
+    const order=['solid','melting','liquid','boiling','gas'];
+    let key='solid';
+    if(frac.solid>=0.999) key='solid';
+    else if(frac.solid>0) key='melting';
+    else if(frac.gas===0) key='liquid';
+    else if(this.temp<frac.boilStart) key='liquid';
+    else if(frac.gas<0.999) key='boiling';
+    else key='gas';
+    const idx=order.indexOf(key);
+    document.querySelectorAll('.tl-step').forEach((el,i)=>el.classList.toggle('active',i===idx));
+
+    this._frac=frac;
+  }
+
+  loop(now){
+    let dtMs=now-this.lastT; this.lastT=now;
+    if(dtMs>60) dtMs=60;
+
+    if(!this.paused){
+      const ease=1-Math.pow(0.0025,dtMs/1000);
+      this.temp=lerp(this.temp,this.targetTemp,clamp(ease,0,1));
+      if(Math.abs(this.temp-this.targetTemp)<0.02) this.temp=this.targetTemp;
+
+      this.applyReadouts();
+      this.stage.render({frac:this._frac,tempC:this.temp}, now, dtMs);
+    }
+
+    requestAnimationFrame(this.loop.bind(this));
+  }
+}
+
+document.addEventListener('DOMContentLoaded',()=>{ new App(); });
+})();
+</script>
+</body>
+</html>
