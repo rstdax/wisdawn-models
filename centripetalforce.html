@@ -1,0 +1,1972 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>The Whirling Stone — Wisdawn Gravitation Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,opsz,wght@0,6..12,400;0,6..12,600;0,6..12,700;0,6..12,800;0,6..12,900;1,6..12,700&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   WISDAWN — THE WHIRLING STONE
+   Design tokens
+   ============================================================ */
+:root{
+  --bg-deep:#080a1c;
+  --bg-space-1:#0c1030;
+  --bg-space-2:#14103a;
+  --panel:#12142e;
+  --panel-border:rgba(151,131,255,0.28);
+  --panel-glass:rgba(18,20,46,0.72);
+  --violet:#8b5cf6;
+  --violet-bright:#a78bfa;
+  --violet-deep:#5b21b6;
+  --stone-core:#c084fc;
+  --stone-glow:#7c3aed;
+  --gold:#f7c948;
+  --gold-deep:#e8a930;
+  --red:#f4534a;
+  --red-deep:#c8362e;
+  --blue-vec:#4da3ff;
+  --green-vec:#39d98a;
+  --wispy-body:#7fd6ff;
+  --wispy-body-dark:#4fb8f0;
+  --ink:#eef0ff;
+  --ink-dim:#aab0d6;
+  --ink-faint:#7a80a8;
+  --success:#39d98a;
+  --font-display:'Fredoka', 'Nunito Sans', sans-serif;
+  --font-body:'Nunito Sans', system-ui, sans-serif;
+  --radius-lg:22px;
+  --radius-md:14px;
+  --radius-sm:9px;
+  --shadow-panel: 0 10px 40px rgba(0,0,0,0.45);
+}
+
+*{box-sizing:border-box;}
+html,body{
+  margin:0; padding:0; height:100%;
+  background:var(--bg-deep);
+  font-family:var(--font-body);
+  color:var(--ink);
+  overflow:hidden;
+  -webkit-tap-highlight-color:transparent;
+}
+body{
+  background:
+    radial-gradient(ellipse 80% 60% at 20% -10%, rgba(124,58,237,0.28), transparent 60%),
+    radial-gradient(ellipse 70% 50% at 100% 10%, rgba(77,163,255,0.14), transparent 55%),
+    radial-gradient(ellipse 100% 80% at 50% 120%, rgba(91,33,182,0.35), transparent 60%),
+    linear-gradient(180deg, var(--bg-space-1), var(--bg-deep) 70%);
+}
+button{font-family:inherit; cursor:pointer;}
+h1,h2,h3{font-family:var(--font-display); margin:0;}
+p{margin:0;}
+:focus-visible{outline:3px solid var(--gold); outline-offset:2px; border-radius:6px;}
+
+/* subtle starfield */
+#stars{position:fixed; inset:0; z-index:0; pointer-events:none; opacity:0.6;}
+
+/* ============================================================
+   APP SHELL
+   ============================================================ */
+#app{
+  position:relative; z-index:1;
+  height:100%; width:100%;
+  display:flex; flex-direction:column;
+}
+
+/* ---- top bar ---- */
+#topbar{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:12px 18px;
+  flex:0 0 auto;
+  z-index:20;
+}
+.icon-btn{
+  width:40px; height:40px; border-radius:50%;
+  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.12);
+  color:var(--ink); display:flex; align-items:center; justify-content:center;
+  font-size:18px; transition:background .15s, transform .15s;
+}
+.icon-btn:hover{background:rgba(255,255,255,0.12); transform:translateY(-1px);}
+.pill{
+  padding:6px 16px; border-radius:999px;
+  background:rgba(139,92,246,0.18);
+  border:1px solid rgba(167,139,250,0.4);
+  color:var(--violet-bright);
+  font-weight:800; font-size:12px; letter-spacing:.14em;
+}
+#topbar-right{display:flex; gap:8px;}
+#menuPanel{
+  position:absolute; top:60px; right:14px;
+  background:var(--panel-glass); backdrop-filter:blur(14px);
+  border:1px solid var(--panel-border); border-radius:var(--radius-md);
+  padding:10px; display:none; flex-direction:column; gap:4px; min-width:200px;
+  box-shadow:var(--shadow-panel); z-index:40;
+}
+#menuPanel.open{display:flex;}
+.menu-row{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:8px 10px; border-radius:8px; font-size:13px; font-weight:700; color:var(--ink-dim);
+}
+.menu-row:hover{background:rgba(255,255,255,0.05); color:var(--ink);}
+.toggle{
+  width:38px; height:22px; border-radius:999px; background:rgba(255,255,255,0.15);
+  border:none; position:relative; transition:background .2s;
+}
+.toggle::after{
+  content:''; position:absolute; top:2px; left:2px; width:18px; height:18px; border-radius:50%;
+  background:#fff; transition:transform .2s;
+}
+.toggle.on{background:var(--violet);}
+.toggle.on::after{transform:translateX(16px);}
+
+/* ---- main stage ---- */
+#stageWrap{
+  flex:1 1 auto; position:relative; min-height:0;
+  display:flex;
+}
+#stage{
+  position:relative; flex:1 1 0; min-width:0;
+  display:flex; align-items:center; justify-content:center;
+  padding:6px 10px;
+}
+#simCanvas{
+  width:100%; height:100%; display:block;
+  border-radius:26px;
+  cursor:default;
+  touch-action:none;
+}
+
+/* side dock (desktop) holds left view-controls + right dashboard */
+.dock{
+  position:absolute; top:14px; bottom:14px;
+  display:flex; flex-direction:column; gap:10px;
+  z-index:15; pointer-events:none;
+}
+.dock > *{pointer-events:auto;}
+#dockLeft{left:14px; justify-content:flex-start;}
+#dockRight{right:14px; justify-content:flex-start; align-items:flex-end;}
+
+.glass-card{
+  background:var(--panel-glass); backdrop-filter:blur(14px);
+  border:1px solid var(--panel-border); border-radius:var(--radius-md);
+  box-shadow:var(--shadow-panel);
+}
+
+/* view mini buttons */
+.view-btn-group{display:flex; flex-direction:column; gap:8px;}
+.view-btn{
+  width:64px; padding:8px 4px 7px; text-align:center;
+  display:flex; flex-direction:column; align-items:center; gap:3px;
+  font-size:10.5px; font-weight:800; color:var(--ink-dim);
+  background:rgba(255,255,255,0.03);
+}
+.view-btn .glyph{font-size:17px;}
+.view-btn[aria-pressed="true"]{color:var(--gold); border-color:rgba(247,201,72,0.5); background:rgba(247,201,72,0.08);}
+.view-btn:hover{color:var(--ink);}
+
+/* dashboard */
+#dashboard{
+  padding:12px 14px; width:180px;
+  display:flex; flex-direction:column; gap:8px;
+}
+#dashboard h4{font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-faint); margin-bottom:2px; font-family:var(--font-body); font-weight:800;}
+.dash-row{display:flex; align-items:baseline; justify-content:space-between; gap:6px;}
+.dash-label{font-size:11.5px; color:var(--ink-dim); font-weight:700;}
+.dash-value{font-size:14px; font-weight:800; font-variant-numeric:tabular-nums;}
+.dash-value.v{color:var(--blue-vec);}
+.dash-value.f{color:var(--red);}
+.dash-divider{height:1px; background:rgba(255,255,255,0.08); margin:2px 0;}
+
+/* tension meter (shown while string intact) */
+#tensionWrap{padding:12px 14px; width:180px;}
+#tensionBar{height:8px; border-radius:5px; background:rgba(255,255,255,0.1); overflow:hidden; margin-top:6px;}
+#tensionFill{height:100%; width:20%; background:linear-gradient(90deg, var(--gold), var(--red)); border-radius:5px; transition:width .12s linear;}
+
+/* bottom control bar (sliders) */
+#controlBar{
+  position:absolute; left:50%; transform:translateX(-50%);
+  bottom:14px; z-index:16;
+  display:flex; gap:14px; padding:14px 18px;
+  align-items:center;
+  max-width:calc(100% - 220px);
+}
+.slider-block{display:flex; flex-direction:column; gap:4px; min-width:150px; width: 100%;}
+.slider-block .lbl-row{display:flex; justify-content:space-between; font-size:10px; font-weight:800; letter-spacing:.06em; color:var(--ink-faint);}
+.slider-block .lbl-row span:last-child{color:var(--gold);}
+input[type=range]{
+  -webkit-appearance:none; appearance:none; width:100%; height:26px; background:transparent;
+}
+input[type=range]::-webkit-slider-runnable-track{
+  height:6px; border-radius:4px;
+  background:linear-gradient(90deg, var(--violet-deep), var(--violet-bright));
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none; margin-top:-9px;
+  width:24px; height:24px; border-radius:50%;
+  background:radial-gradient(circle at 35% 30%, #fff, var(--gold) 60%, var(--gold-deep));
+  border:2px solid rgba(255,255,255,0.5);
+  box-shadow:0 2px 8px rgba(0,0,0,0.4);
+}
+input[type=range]::-moz-range-track{height:6px; border-radius:4px; background:linear-gradient(90deg, var(--violet-deep), var(--violet-bright));}
+input[type=range]::-moz-range-thumb{
+  width:22px; height:22px; border-radius:50%; border:2px solid rgba(255,255,255,0.5);
+  background:radial-gradient(circle at 35% 30%, #fff, var(--gold) 60%, var(--gold-deep));
+}
+
+/* snap button */
+#snapBtnWrap{position:absolute; left:50%; bottom:14px; transform:translateX(-50%); z-index:17;}
+#snapBtn{
+  display:flex; align-items:center; gap:9px;
+  padding:16px 30px; border-radius:999px; border:none;
+  background:linear-gradient(180deg, var(--red) 0%, var(--red-deep) 100%);
+  color:#fff; font-weight:900; font-size:15px; letter-spacing:.03em;
+  box-shadow:0 8px 26px rgba(244,83,74,0.5), inset 0 1px 0 rgba(255,255,255,0.25);
+  animation: pulseSnap 2.2s ease-in-out infinite;
+}
+#snapBtn:hover{transform:translateY(-2px);}
+#snapBtn:active{transform:translateY(0px) scale(.97);}
+@keyframes pulseSnap{
+  0%,100%{box-shadow:0 8px 26px rgba(244,83,74,0.5), inset 0 1px 0 rgba(255,255,255,0.25);}
+  50%{box-shadow:0 8px 40px rgba(244,83,74,0.85), inset 0 1px 0 rgba(255,255,255,0.25);}
+}
+.reduced-motion #snapBtn{animation:none;}
+
+/* generic primary/secondary buttons */
+.btn{
+  border:none; border-radius:999px; font-weight:900; font-size:14.5px;
+  padding:14px 26px; letter-spacing:.01em;
+  transition:transform .12s, box-shadow .12s, filter .12s;
+  text-align: center;
+}
+.btn:hover{transform:translateY(-2px);}
+.btn:active{transform:translateY(0); filter:brightness(0.95);}
+.btn-gold{
+  background:linear-gradient(180deg, #ffd873, var(--gold-deep));
+  color:#3a2400;
+  box-shadow:0 8px 22px rgba(247,201,72,0.35), inset 0 1px 0 rgba(255,255,255,0.5);
+}
+.btn-violet{
+  background:linear-gradient(180deg, var(--violet-bright), var(--violet-deep));
+  color:#fff;
+  box-shadow:0 8px 22px rgba(139,92,246,0.4), inset 0 1px 0 rgba(255,255,255,0.25);
+}
+.btn-ghost{
+  background:rgba(255,255,255,0.06); color:var(--ink);
+  border:1px solid rgba(255,255,255,0.16);
+}
+.btn-green{
+  background:linear-gradient(180deg, #5eeba8, #22a866); color:#04220f;
+  box-shadow:0 8px 22px rgba(57,217,138,0.35);
+}
+.btn:disabled{opacity:.35; cursor:not-allowed; transform:none;}
+.btn-row{display:flex; gap:10px; flex-wrap:wrap;}
+.btn-sm{padding:10px 16px; font-size:12.5px; border-radius:12px;}
+
+/* ---- INTRO screen ---- */
+#introScreen{
+  position:absolute; inset:0; z-index:50; 
+  display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center;
+  padding:40px 20px; gap:18px; 
+  background:var(--bg-deep); 
+  overflow-y: auto;
+}
+#introScreen .eyebrow{color:var(--violet-bright); font-weight:900; font-size:12px; letter-spacing:.18em;}
+#introScreen h1{font-size:clamp(32px,5vw,54px); line-height:1.05; background:linear-gradient(135deg,#fff,#c9b8ff); -webkit-background-clip:text; background-clip:text; color:transparent; margin-bottom: 10px;}
+#introScreen .sub{font-size:16px; color:var(--ink-dim); max-width:480px; line-height:1.5;}
+#introWispyRow{display:flex; align-items:center; flex-direction:column; gap:14px; margin-top:16px;}
+.speech-bubble{
+  background:#fff; color:#20204a; padding:12px 16px; border-radius:16px;
+  font-weight:800; font-size:14px; position:relative; max-width:280px; line-height:1.35;
+  box-shadow:0 6px 18px rgba(0,0,0,0.3);
+}
+
+/* ---- Wispy character ---- */
+.wispy {
+  width: 88px; height: auto; object-fit: contain; flex: 0 0 auto;
+  filter: drop-shadow(0 6px 14px rgba(0,0,0,0.4));
+  animation: wispyBob 2.6s ease-in-out infinite;
+}
+.wispy.big { width: 120px; }
+.reduced-motion .wispy { animation: none; }
+@keyframes wispyBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+
+#wispyDock{
+  position:absolute; left:18px; bottom:150px; z-index:18;
+  display:flex; align-items:flex-end; gap:12px; max-width:300px;
+}
+#wispyDock .speech-bubble{display:none;}
+#wispyDock.talking .speech-bubble{display:block;}
+
+/* ---- prediction layer ---- */
+#predictionResultCard{
+  position:absolute; right:14px; top:14px; z-index:16;
+  padding:12px 14px; width:150px; display:none; flex-direction:column; gap:8px;
+}
+#predictionResultCard h4{font-size:10px; letter-spacing:.1em; color:var(--ink-faint); text-transform:uppercase;}
+#predArrowPreview{width:100%; height:40px;}
+
+/* ---- Confirm Button Wrap ---- */
+#confirmBtnWrap {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 30;
+  display: none;
+  width: max-content;
+}
+
+/* ---- panels for post-release / explanation / formula / challenge / summary ---- */
+.overlay-panel{
+  position:absolute; z-index:22;
+  background:var(--panel-glass); backdrop-filter:blur(16px);
+  border:1px solid var(--panel-border); border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-panel);
+  padding:18px 20px;
+  display:none;
+  flex-direction:column; gap:10px;
+  pointer-events: auto; /* Ensures clicks register */
+}
+.overlay-panel.show{display:flex;}
+#observeCallout{top:16px; left:50%; transform:translateX(-50%); text-align:center; padding:10px 22px; width:max-content;}
+#observeCallout h3{font-size:16px; color:var(--gold);}
+
+#topLeftMessage{
+  top:14px; left:14px; max-width:320px;
+}
+#topLeftMessage p{font-size:14px; line-height:1.4; color:var(--ink);}
+#topLeftMessage .tag{color:var(--gold); font-weight:900;}
+
+#statsCard{top:14px; right:14px; width:150px;}
+.stat-row{display:flex; justify-content:space-between; font-size:12px; color:var(--ink-dim); font-weight:700;}
+.stat-row b{color:var(--ink); font-variant-numeric:tabular-nums;}
+
+/* ---- full scene overlays (concept / formula / challenge / misconception / realworld / summary) ---- */
+.full-scene{
+  position:absolute; inset:0; z-index:30;
+  display:none; flex-direction:column; align-items:center; justify-content:center;
+  padding:26px; overflow-y:auto;
+  background: rgba(8, 10, 28, 0.4); 
+}
+.full-scene.show{display:flex;}
+.scene-inner{
+  width:100%; max-width:920px;
+  background:var(--panel-glass); backdrop-filter:blur(18px);
+  border:1px solid var(--panel-border); border-radius:26px;
+  box-shadow:var(--shadow-panel);
+  padding:32px 36px;
+  display:flex; flex-direction:column; gap:18px;
+  max-height:92%;
+  overflow-y:auto;
+}
+.scene-inner::-webkit-scrollbar{width:8px;}
+.scene-inner::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.15); border-radius:4px;}
+.scene-eyebrow{color:var(--violet-bright); font-weight:900; font-size:11.5px; letter-spacing:.16em;}
+.scene-title{font-size:clamp(22px,3.4vw,32px);}
+.scene-sub{color:var(--ink-dim); font-size:14.5px; line-height:1.5; max-width:640px;}
+
+.before-after-grid{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+.ba-card{border-radius:16px; padding:16px 18px; border:1px solid rgba(255,255,255,0.1);}
+.ba-card.before{background:rgba(77,163,255,0.08);}
+.ba-card.after{background:rgba(244,83,74,0.08);}
+.ba-card h4{font-size:12px; letter-spacing:.1em; margin-bottom:10px; text-transform:uppercase;}
+.ba-card.before h4{color:var(--blue-vec);}
+.ba-card.after h4{color:var(--red);}
+.ba-line{display:flex; justify-content:space-between; font-size:13.5px; padding:6px 0; border-bottom:1px dashed rgba(255,255,255,0.08); font-weight:700;}
+.ba-line:last-child{border-bottom:none;}
+
+.formula-box{
+  align-self:center; display:flex; align-items:center; gap:8px;
+  font-family:var(--font-display); font-size:clamp(28px,5vw,44px); font-weight:700;
+  padding:18px 30px; border-radius:18px; background:rgba(139,92,246,0.12); border:1px solid var(--panel-border);
+}
+.formula-box .term{padding:2px 8px; border-radius:8px; transition:background .2s, color .2s; cursor:pointer;}
+.formula-box .term.m.active{background:rgba(57,217,138,0.25); color:var(--green-vec);}
+.formula-box .term.v.active{background:rgba(77,163,255,0.25); color:var(--blue-vec);}
+.formula-box .term.r.active{background:rgba(244,83,74,0.25); color:var(--red);}
+.term-legend{display:flex; gap:16px; flex-wrap:wrap; font-size:12.5px; font-weight:700; color:var(--ink-dim);}
+.term-legend .dot{width:9px; height:9px; border-radius:50%; display:inline-block; margin-right:5px;}
+
+.mini-lab{display:flex; gap:20px; align-items:center; flex-wrap:wrap; background:rgba(255,255,255,0.03); border-radius:16px; padding:16px 18px;}
+.mini-lab .readout{font-size:14px; font-weight:800; min-width:140px;}
+.mini-lab .readout b{color:var(--gold); font-size:20px;}
+
+.challenge-card{background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:16px 18px; display:flex; flex-direction:column; gap:8px;}
+.challenge-card.done{border-color:rgba(57,217,138,0.5); background:rgba(57,217,138,0.07);}
+.challenge-goal{font-size:14.5px; font-weight:800;}
+.challenge-status{font-size:12px; font-weight:800; color:var(--ink-faint);}
+.challenge-status.ok{color:var(--success);}
+
+.choice-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+.choice-btn{
+  text-align:left; padding:14px 16px; border-radius:14px; border:1px solid rgba(255,255,255,0.12);
+  background:rgba(255,255,255,0.03); color:var(--ink); font-weight:700; font-size:13.5px;
+}
+.choice-btn:hover{border-color:var(--violet-bright); background:rgba(139,92,246,0.1);}
+.choice-btn.correct{border-color:var(--success); background:rgba(57,217,138,0.14);}
+.choice-btn.wrong{border-color:var(--red); background:rgba(244,83,74,0.12);}
+
+.realworld-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px;}
+.rw-card{background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.09); border-radius:16px; padding:14px; text-align:center; display:flex; flex-direction:column; gap:6px;}
+.rw-card .emoji{font-size:26px;}
+.rw-card .name{font-weight:800; font-size:13px;}
+.rw-card .source{font-size:11.5px; color:var(--ink-faint); min-height:16px;}
+.rw-card.revealed .source{color:var(--gold);}
+
+.summary-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+.summary-card{display:flex; gap:12px; align-items:flex-start; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:14px; padding:14px 16px;}
+.summary-card .ico{font-size:20px;}
+.summary-card p{font-size:13.5px; color:var(--ink-dim); line-height:1.4;}
+.summary-card b{color:var(--ink);}
+
+/* ---- bottom nav ---- */
+#navBar{
+  flex:0 0 auto; z-index:20;
+  display:flex; align-items:center; gap:0;
+  padding:8px 14px 12px;
+  overflow-x:auto;
+  scrollbar-width:none;
+}
+#navBar::-webkit-scrollbar{display:none;}
+.nav-item{
+  display:flex; flex-direction:column; align-items:center; gap:5px;
+  padding:6px 12px; flex:0 0 auto; min-width:76px;
+  opacity:0.45; position:relative;
+}
+.nav-item.current{opacity:1;}
+.nav-item .nav-circle{
+  width:44px; height:44px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  background:rgba(255,255,255,0.05); border:2px solid transparent; font-size:19px;
+}
+.nav-item.current .nav-circle{border-color:var(--gold); background:rgba(247,201,72,0.12); box-shadow:0 0 16px rgba(247,201,72,0.5);}
+.nav-item .nav-label{font-size:9px; font-weight:800; text-align:center; letter-spacing:.02em; line-height:1.2; color:var(--ink-dim); white-space:nowrap;}
+.nav-item.current .nav-label{color:var(--gold);}
+.nav-item.home .nav-circle{background:rgba(255,255,255,0.08);}
+
+/* toast */
+#toast{
+  position:fixed; left:50%; bottom:90px; transform:translateX(-50%) translateY(20px);
+  background:#1c1638; border:1px solid var(--panel-border); padding:12px 20px; border-radius:14px;
+  font-weight:800; font-size:13px; z-index:100; opacity:0; pointer-events:none; transition:opacity .25s, transform .25s;
+  box-shadow:var(--shadow-panel); width:max-content; max-width:90%; text-align:center;
+}
+#toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+
+/* sr-only */
+.sr-only{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap;}
+
+/* countdown overlay */
+#countdownOverlay{
+  position:absolute; inset:0; z-index:35; display:none;
+  align-items:center; justify-content:center;
+  background:rgba(5,6,20,0.55);
+}
+#countdownOverlay.show{display:flex;}
+#countdownNum{
+  font-family:var(--font-display); font-size:120px; font-weight:700; color:var(--gold);
+  text-shadow:0 0 40px rgba(247,201,72,0.7);
+  animation: countPop .55s ease-out;
+}
+@keyframes countPop{0%{transform:scale(0.4); opacity:0;}60%{transform:scale(1.15); opacity:1;}100%{transform:scale(1); opacity:1;}}
+
+/* ============================================================
+   RESPONSIVE — mobile
+   ============================================================ */
+@media (max-width:880px){
+  /* Adjust app shell for mobile stacking */
+  #stageWrap { flex-direction: column; }
+  #stage { flex: 1 1 0; min-height: 250px; padding: 4px 8px; }
+  
+  #mobileSheet {
+    position: relative; 
+    flex: 0 0 auto;
+    margin: 4px 8px 8px;
+    display: flex; flex-direction: column; gap: 10px; padding: 12px;
+    z-index: 16;
+  }
+  
+  #introScreen{
+    padding: 20px 16px; align-items:center; text-align:center;
+    justify-content: flex-start; overflow-y: auto;
+  }
+  #introScreen h1{font-size:38px; margin-top: 20px;}
+  #introWispyRow{flex-direction:column; align-items:center;}
+  .speech-bubble::after{display:none;}
+
+  .dock{display:none;} /* replaced by bottom sheet */
+  #dashboard, #tensionWrap{width:auto;}
+
+  #controlBar{ display: none; }
+  .slider-block{min-width:0; width: 100%;}
+  .slider-block input[type=range] { height: 20px; }
+  #simCanvas{border-radius:20px;}
+
+  #mobileDashRow{display:flex; gap:8px; overflow-x:auto; padding-bottom:4px;}
+  #mobileDashRow::-webkit-scrollbar { height: 4px; }
+  #mobileDashRow::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+  
+  .mobile-chip{
+    flex:0 0 auto; background:rgba(255,255,255,0.05); border:1px solid var(--panel-border);
+    border-radius:12px; padding:6px 10px; text-align:center; min-width:76px;
+  }
+  .mobile-chip .l{font-size:9px; color:var(--ink-faint); font-weight:800; text-transform:uppercase;}
+  .mobile-chip .v{font-size:13px; font-weight:900; font-variant-numeric:tabular-nums;}
+
+  #snapBtnWrapM { align-self: center; width: 100%; }
+  #snapBtnWrapM button { width: 100%; padding: 14px; font-size: 16px; }
+  
+  #wispyDock{left:10px; bottom:10px; top:auto; max-width:80%;}
+  .wispy{width:64px;}
+  .speech-bubble{font-size:12px; padding:9px 12px; max-width:210px;}
+
+  .overlay-panel{max-width:calc(100% - 16px);}
+  #statsCard, #predictionResultCard{width:auto; min-width:120px; right: 8px;}
+  
+  /* Fix Prediction Panel Placement */
+  #confirmBtnWrap { 
+    bottom: 24px; top: auto;
+  }
+  
+  /* Observe callout scaling */
+  #observeCallout { width: 90%; padding: 12px; }
+  
+  /* Full screen scene fixes */
+  .full-scene { padding: 12px; }
+  .scene-inner{padding: 20px 16px; border-radius: 16px; gap: 12px;}
+  .scene-title { font-size: 22px; }
+  .mini-lab { padding: 12px; gap: 12px; }
+  
+  .formula-box { font-size: 22px; padding: 12px; flex-wrap: wrap; justify-content: center; }
+  
+  .before-after-grid, .choice-grid, .summary-grid { grid-template-columns: 1fr; }
+  
+  #navBar{padding:6px 8px 10px;}
+  .nav-item{min-width:64px; padding:4px 8px;}
+  .nav-item .nav-circle{width:38px; height:38px; font-size:16px;}
+  
+  #afterReleasePanel { flex-wrap: wrap; justify-content: center; width: 90%; bottom: 10px; }
+}
+
+.desktop-only{display:flex;}
+.mobile-only{display:none;}
+@media (max-width:880px){
+  .desktop-only{display:none !important;}
+  .mobile-only{display:flex !important;}
+}
+</style>
+</head>
+<body>
+<canvas id="stars"></canvas>
+<div id="app">
+
+  <!-- ============ TOP BAR ============ -->
+  <div id="topbar">
+    <div style="display:flex; align-items:center; gap:10px;">
+      <button class="icon-btn" id="backBtn" aria-label="Go back">←</button>
+      <span class="pill">GRAVITATION</span>
+    </div>
+    <div id="topbar-right">
+      <button class="icon-btn" id="menuBtn" aria-label="Open menu" aria-haspopup="true" aria-expanded="false">☰</button>
+    </div>
+    <div id="menuPanel" role="menu">
+      <div class="menu-row">🔊 Sound <button class="toggle on" id="soundToggle" aria-label="Toggle sound"></button></div>
+      <div class="menu-row">🎞️ Reduced motion <button class="toggle" id="motionToggle" aria-label="Toggle reduced motion"></button></div>
+      <div class="menu-row">🖱️ Show vectors <button class="toggle" id="vectorToggleMenu" aria-label="Toggle vectors"></button></div>
+    </div>
+  </div>
+
+  <!-- ============ STAGE ============ -->
+  <div id="stageWrap">
+    <div id="stage">
+      <canvas id="simCanvas" aria-label="Real-time simulation of a stone whirling on a string" role="img"></canvas>
+
+      <!-- countdown -->
+      <div id="countdownOverlay"><div id="countdownNum">3</div></div>
+
+      <!-- Wispy dock (persistent guide, all sim states) -->
+      <div id="wispyDock" class="talking">
+        <img src="wispy.png" class="wispy" id="wispySvg" alt="Wispy" />
+        <div class="speech-bubble" id="wispyText">Ready?</div>
+      </div>
+
+      <!-- LEFT dock: view buttons -->
+      <div class="dock desktop-only" id="dockLeft">
+        <div class="glass-card view-btn-group" id="viewButtons" role="group" aria-label="Camera view">
+          <button class="view-btn" data-view="top" aria-pressed="true"><span class="glyph">◎</span>Top View</button>
+          <button class="view-btn" data-view="side" aria-pressed="false"><span class="glyph">◑</span>Side View</button>
+          <button class="view-btn" id="vectorToggleBtn" aria-pressed="false"><span class="glyph">↗</span>Show<br>Vectors</button>
+        </div>
+      </div>
+
+      <!-- RIGHT dock: dashboard / tension -->
+      <div class="dock desktop-only" id="dockRight">
+        <div class="glass-card" id="tensionWrap">
+          <div class="dash-row"><span class="dash-label">TENSION IN STRING</span></div>
+          <div class="dash-row"><span class="dash-value" id="tensionPct" style="color:var(--gold); font-size:20px;">100%</span></div>
+          <div id="tensionBar"><div id="tensionFill"></div></div>
+        </div>
+        <div class="glass-card" id="dashboard">
+          <h4>Live Physics</h4>
+          <div class="dash-row"><span class="dash-label">Mass</span><span class="dash-value" id="dashMass">1.0 kg</span></div>
+          <div class="dash-row"><span class="dash-label">Radius</span><span class="dash-value" id="dashRadius">2.0 m</span></div>
+          <div class="dash-row"><span class="dash-label">Angular ω</span><span class="dash-value" id="dashOmega">2.5 rad/s</span></div>
+          <div class="dash-divider"></div>
+          <div class="dash-row"><span class="dash-label">Velocity</span><span class="dash-value v" id="dashVelocity">5.0 m/s</span></div>
+          <div class="dash-row"><span class="dash-label">Centrip. a</span><span class="dash-value" id="dashAccel">12.5 m/s²</span></div>
+          <div class="dash-row"><span class="dash-label">Centrip. F</span><span class="dash-value f" id="dashForce">12.5 N</span></div>
+        </div>
+      </div>
+
+      <!-- prediction result mini card -->
+      <div class="glass-card" id="predictionResultCard">
+        <h4>Your Prediction</h4>
+        <svg id="predArrowPreview" viewBox="0 0 140 40"><line x1="10" y1="30" x2="110" y2="10" stroke="#f7c948" stroke-width="3" stroke-dasharray="5 4" stroke-linecap="round"/><polygon points="110,10 100,8 104,18" fill="#f7c948"/></svg>
+      </div>
+
+      <!-- Confirm Button Wrap (Positioned at bottom of stage, above controls) -->
+      <div id="confirmBtnWrap">
+        <button class="btn btn-gold" id="confirmPredictionBtn">CONFIRM PREDICTION</button>
+      </div>
+
+      <!-- top-left contextual message (used in explanation / release states) -->
+      <div class="overlay-panel" id="topLeftMessage">
+        <p id="topLeftMessageText">The stone moves in a straight line along the <span class="tag">tangent</span> to the circle!</p>
+      </div>
+
+      <!-- observe callout (paused after release) -->
+      <div class="overlay-panel" id="observeCallout">
+        <h3>LOOK CLOSELY 👀</h3>
+        <p style="font-size:12.5px; color:var(--ink-dim);">Velocity remains. Centripetal force = 0.</p>
+        <div class="btn-row" style="justify-content:center; margin-top:4px;">
+          <button class="btn btn-green btn-sm" id="resumeBtn">▶ Resume</button>
+          <button class="btn btn-ghost btn-sm" id="stepBtn">⏭ Step Forward</button>
+          <button class="btn btn-ghost btn-sm" id="resetBtnObserve">↻ Reset</button>
+        </div>
+      </div>
+
+      <!-- flight stats card -->
+      <div class="glass-card" id="statsCard" style="display:none;">
+        <div class="stat-row"><span>TIME</span><b id="statTime">0.0 s</b></div>
+        <div class="stat-row"><span>SPEED</span><b id="statSpeed">0.0 m/s</b></div>
+        <div class="stat-row"><span>DISTANCE</span><b id="statDist">0.0 m</b></div>
+      </div>
+
+      <!-- bottom center controls: sliders (explore) -->
+      <div class="glass-card desktop-only" id="controlBar">
+        <div class="slider-block">
+          <div class="lbl-row"><span>SPEED OF ROTATION</span><span id="omegaLabel">2.5 rad/s</span></div>
+          <input type="range" id="omegaSlider" min="1" max="9" step="0.1" value="2.5" aria-label="Speed of rotation">
+        </div>
+        <div class="slider-block">
+          <div class="lbl-row"><span>STRING LENGTH</span><span id="radiusLabel">2.0 m</span></div>
+          <input type="range" id="radiusSlider" min="0.6" max="3.6" step="0.1" value="2.0" aria-label="String length / radius">
+        </div>
+        <div class="slider-block">
+          <div class="lbl-row"><span>STONE MASS</span><span id="massLabel">1.0 kg</span></div>
+          <input type="range" id="massSlider" min="0.2" max="3" step="0.1" value="1.0" aria-label="Stone mass">
+        </div>
+      </div>
+
+      <!-- snap button -->
+      <div id="snapBtnWrap" class="desktop-only">
+        <button id="snapBtn"><span>🔴</span> SNAP STRING</button>
+      </div>
+
+      <!-- after-release action bar -->
+      <div class="overlay-panel" id="afterReleasePanel" style="left:50%; transform:translateX(-50%); bottom:14px; flex-direction:row; align-items:center;">
+        <button class="btn btn-ghost btn-sm" id="playAgainBtn">↻ Play Again</button>
+        <button class="btn btn-gold btn-sm" id="continueToTangentBtn">Explanation & Formula →</button>
+      </div>
+    </div>
+    
+    <!-- mobile bottom sheet -->
+    <div class="glass-card mobile-only" id="mobileSheet">
+      <div id="mobileDashRow">
+        <div class="mobile-chip"><div class="l">Velocity</div><div class="v" id="mVel" style="color:var(--blue-vec);">5.0 m/s</div></div>
+        <div class="mobile-chip"><div class="l">Force</div><div class="v" id="mForce" style="color:var(--red);">12.5 N</div></div>
+        <div class="mobile-chip"><div class="l">Radius</div><div class="v" id="mRad">2.0 m</div></div>
+        <div class="mobile-chip"><div class="l">Mass</div><div class="v" id="mMass">1.0 kg</div></div>
+      </div>
+      <div class="slider-block">
+        <div class="lbl-row"><span>SPEED</span><span id="omegaLabelM">2.5 rad/s</span></div>
+        <input type="range" id="omegaSliderM" min="1" max="9" step="0.1" value="2.5" aria-label="Speed of rotation">
+      </div>
+      <div class="slider-block">
+        <div class="lbl-row"><span>STRING LENGTH</span><span id="radiusLabelM">2.0 m</span></div>
+        <input type="range" id="radiusSliderM" min="0.6" max="3.6" step="0.1" value="2.0" aria-label="String length">
+      </div>
+      <div class="slider-block">
+        <div class="lbl-row"><span>MASS</span><span id="massLabelM">1.0 kg</span></div>
+        <input type="range" id="massSliderM" min="0.2" max="3" step="0.1" value="1.0" aria-label="Stone mass">
+      </div>
+      <div class="btn-row" style="justify-content:space-between; align-items:center;">
+        <button class="btn btn-ghost btn-sm" id="vectorToggleM">↗ Vectors</button>
+        <div id="snapBtnWrapM" style="flex:1; margin-left:10px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ INTRO SCREEN ============ -->
+  <div id="introScreen">
+    <div class="eyebrow">EXPERIMENT 03 · GRAVITATION</div>
+    <h1>The Whirling Stone</h1>
+    <p class="sub">What happens when the force keeping an object in a circle suddenly disappears?</p>
+    <div id="introWispyRow">
+      <img src="wispy.png" class="wispy big" id="wispySvgIntro" alt="Wispy" />
+      <div class="speech-bubble">I've got a stone moving in a circle. But what happens if I suddenly let go?</div>
+    </div>
+    <button class="btn btn-gold" id="startBtn" style="margin-top:8px;">START EXPERIMENT</button>
+  </div>
+
+  <!-- ============ CONCEPT REVEAL ============ -->
+  <div class="full-scene" id="conceptScene">
+    <div class="scene-inner">
+      <div class="scene-eyebrow">WHAT JUST HAPPENED (NCERT CLASS 9)</div>
+      <h2 class="scene-title">Centripetal Force & Inertia</h2>
+      <p class="scene-sub">According to the NCERT Class 9 textbook: <em>"The force that causes this acceleration and keeps the body moving along the circular path is acting towards the centre. This force is called the <strong>centripetal (meaning ‘centre-seeking’) force</strong>."</em></p>
+      <div class="before-after-grid">
+        <div class="ba-card before">
+          <h4>Before Snap</h4>
+          <div class="ba-line"><span>Velocity</span><span>→ Tangent</span></div>
+          <div class="ba-line"><span>Centripetal Force</span><span>→ Toward Center</span></div>
+          <div class="ba-line"><span>Path</span><span>→ Circular</span></div>
+        </div>
+        <div class="ba-card after">
+          <h4>After Snap</h4>
+          <div class="ba-line"><span>Velocity</span><span>→ Tangent</span></div>
+          <div class="ba-line"><span>Centripetal Force</span><span>→ 0 N</span></div>
+          <div class="ba-line"><span>Path</span><span>→ Straight line</span></div>
+        </div>
+      </div>
+      <p class="scene-sub">The textbook further explains: <em>"In the absence of this force, the stone flies off along a straight line. This straight line will be a <strong>tangent</strong> to the circular path."</em> Because the string broke, the centripetal force vanished (F<sub>c</sub> = 0), and inertia caused the stone to maintain its tangential velocity.</p>
+      <div class="btn-row" style="justify-content:flex-end;">
+        <button class="btn btn-gold" id="toFormulaBtn">Next: The Formula →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ FORMULA DISCOVERY ============ -->
+  <div class="full-scene" id="formulaScene">
+    <div class="scene-inner">
+      <div class="scene-eyebrow">FORMULA DISCOVERY</div>
+      <h2 class="scene-title">Centripetal Force Formula</h2>
+      <p class="scene-sub">As per the principles of motion (and your experiments), the magnitude of this centre-seeking force is given by the formula. Tap a term to see what it controls.</p>
+      <div class="formula-box" id="formulaBox">
+        F<sub>c</sub> = <span class="term m" data-term="m" tabindex="0">m</span><span class="term v" data-term="v" tabindex="0">v²</span> / <span class="term r" data-term="r" tabindex="0">r</span>
+      </div>
+      <div class="term-legend">
+        <span><i class="dot" style="background:var(--green-vec);"></i>m — mass of the stone</span>
+        <span><i class="dot" style="background:var(--blue-vec);"></i>v — tangential velocity (squared!)</span>
+        <span><i class="dot" style="background:var(--red);"></i>r — radius of the circle</span>
+      </div>
+
+      <div class="mini-lab">
+        <div style="flex:1; min-width:220px;">
+          <p style="font-weight:800; margin-bottom:8px;">Try it: what happens if speed doubles?</p>
+          <div class="btn-row">
+            <button class="btn btn-violet btn-sm" id="formulaDoubleSpeedBtn">Double the speed →</button>
+            <button class="btn btn-ghost btn-sm" id="formulaDoubleRadiusBtn">Double the radius →</button>
+            <button class="btn btn-ghost btn-sm" id="formulaDoubleMassBtn">Double the mass →</button>
+          </div>
+        </div>
+        <div class="readout" id="formulaReadout">
+          F<sub>c</sub> was <b id="formulaBefore">12.5</b> N<br>
+          F<sub>c</sub> is now <b id="formulaAfter">—</b> N
+        </div>
+      </div>
+      <p class="scene-sub" id="formulaExplainText">Force squares with speed, scales directly with mass, and shrinks as the radius grows — try each button above to see it for yourself.</p>
+      <div class="btn-row" style="justify-content:flex-end;">
+        <button class="btn btn-gold" id="toChallengeBtn">Next: Mini Challenges →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ CHALLENGES ============ -->
+  <div class="full-scene" id="challengeScene">
+    <div class="scene-inner">
+      <div class="scene-eyebrow">MINI CHALLENGES</div>
+      <h2 class="scene-title">Put It To The Test</h2>
+      <p class="scene-sub">Go back to the sliders (behind this panel — close it or resize) — actually, use the live mini-sliders below to solve each challenge.</p>
+
+      <div class="mini-lab" style="flex-direction:column; align-items:stretch; gap:12px;">
+        <div class="slider-block">
+          <div class="lbl-row"><span>SPEED (ω)</span><span id="chOmegaLabel">2.5 rad/s</span></div>
+          <input type="range" id="chOmegaSlider" min="1" max="9" step="0.1" value="2.5">
+        </div>
+        <div class="slider-block">
+          <div class="lbl-row"><span>RADIUS</span><span id="chRadiusLabel">2.0 m</span></div>
+          <input type="range" id="chRadiusSlider" min="0.6" max="3.6" step="0.1" value="2.0">
+        </div>
+        <div class="dash-row" style="font-size:13px;"><span class="dash-label">Current Centripetal Force</span><span class="dash-value f" id="chForceLive">12.5 N</span></div>
+      </div>
+
+      <div id="challengeList" style="display:flex; flex-direction:column; gap:10px;"></div>
+
+      <div class="btn-row" style="justify-content:flex-end;">
+        <button class="btn btn-gold" id="toMisconceptionBtn">Next: Quick Check →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ MISCONCEPTION TEST ============ -->
+  <div class="full-scene" id="misconceptionScene">
+    <div class="scene-inner">
+      <div class="scene-eyebrow">QUICK CHECK</div>
+      <h2 class="scene-title">When the string breaks, what force pushes the stone outward?</h2>
+      <div class="choice-grid" id="misconceptionChoices">
+        <button class="choice-btn" data-correct="false">An outward "centrifugal" force flings it away.</button>
+        <button class="choice-btn" data-correct="true">No new force is needed — it just keeps its existing velocity.</button>
+        <button class="choice-btn" data-correct="false">Gravity pushes it sideways.</button>
+        <button class="choice-btn" data-correct="false">The string pushes it as it breaks.</button>
+      </div>
+      <div id="misconceptionFeedback" style="display:none;">
+        <div id="wispyFeedbackRow" style="display:flex; align-items:flex-start; gap:12px; margin-top:6px;">
+          <img src="wispy.png" class="wispy" id="wispySvgMis" alt="Wispy" style="width:60px;height:auto;" />
+          <div class="speech-bubble" id="misconceptionWispyText" style="max-width:420px;"></div>
+        </div>
+        <p class="scene-sub" style="margin-top:10px;">Centripetal force = 0 the instant the string breaks. No outward force ever appears — the stone simply continues moving in the direction it already had. That's <b style="color:var(--ink);">inertia</b>, not a new push.</p>
+      </div>
+      <div class="btn-row" style="justify-content:flex-end;">
+        <button class="btn btn-gold" id="toRealworldBtn" disabled>Next: Real World →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ REAL WORLD ============ -->
+  <div class="full-scene" id="realworldScene">
+    <div class="scene-inner">
+      <div class="scene-eyebrow">CONNECT IT</div>
+      <h2 class="scene-title">Where does the inward force come from?</h2>
+      <p class="scene-sub">Every circular motion in the real world needs an inward force too. Tap each card to reveal its source.</p>
+      <div class="realworld-grid" id="realworldGrid">
+        <div class="rw-card" data-source="Friction between ball and pitch/hand">
+          <div class="emoji">🏏</div><div class="name">Cricket ball spin</div><div class="source">Tap to reveal</div>
+        </div>
+        <div class="rw-card" data-source="Friction between tyres and road">
+          <div class="emoji">🚗</div><div class="name">Turning car</div><div class="source">Tap to reveal</div>
+        </div>
+        <div class="rw-card" data-source="Earth's gravity">
+          <div class="emoji">🌍</div><div class="name">Satellite orbit</div><div class="source">Tap to reveal</div>
+        </div>
+        <div class="rw-card" data-source="Tension in the support arm">
+          <div class="emoji">🎡</div><div class="name">Ferris wheel</div><div class="source">Tap to reveal</div>
+        </div>
+        <div class="rw-card" data-source="Normal force from the bucket wall">
+          <div class="emoji">🪣</div><div class="name">Water in a bucket</div><div class="source">Tap to reveal</div>
+        </div>
+        <div class="rw-card" data-source="String tension (this experiment!)">
+          <div class="emoji">🪨</div><div class="name">Whirling stone</div><div class="source">Tap to reveal</div>
+        </div>
+      </div>
+      <div class="btn-row" style="justify-content:flex-end;">
+        <button class="btn btn-gold" id="toSummaryBtn">Finish: Summary →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SUMMARY ============ -->
+  <div class="full-scene" id="summaryScene">
+    <div class="scene-inner">
+      <div class="scene-eyebrow">WHAT DID WE LEARN?</div>
+      <h2 class="scene-title">The Whirling Stone — Summary</h2>
+      <div class="summary-grid">
+        <div class="summary-card"><span class="ico">🔵</span><p><b>Velocity is always tangential</b> to the circular path, at every instant.</p></div>
+        <div class="summary-card"><span class="ico">🔴</span><p><b>Centripetal force always points toward the centre</b> — that's what keeps the motion circular.</p></div>
+        <div class="summary-card"><span class="ico">🟢</span><p>When that force disappears, the object <b>moves in a straight line along the tangent</b> — no curve, no outward push.</p></div>
+        <div class="summary-card"><span class="ico">📐</span><p>Centripetal force follows <b>F<sub>c</sub> = mv²/r</b> — bigger with speed & mass, smaller with radius.</p></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-violet" id="exploreMoreBtn">↻ EXPLORE MORE</button>
+        <button class="btn btn-gold" id="nextExperimentBtn">NEXT EXPERIMENT →</button>
+      </div>
+    </div>
+  </div>
+
+</div> <!-- /app -->
+
+  <!-- ============ BOTTOM NAV ============ -->
+  <div id="navBar" role="navigation" aria-label="Gravitation experiments"></div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+(function(){
+"use strict";
+
+/* ============================================================
+   0. UTILITIES
+   ============================================================ */
+const $ = (sel, root) => (root||document).querySelector(sel);
+const $$ = (sel, root) => Array.from((root||document).querySelectorAll(sel));
+const clamp = (v,a,b) => Math.max(a, Math.min(b,v));
+const lerp = (a,b,t) => a + (b-a)*t;
+const fmt = (v, d=1) => Number(v).toFixed(d);
+
+let toastTimer=null;
+function toast(msg, ms=2200){
+  const el = $('#toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=> el.classList.remove('show'), ms);
+}
+
+/* prefers-reduced-motion */
+const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ============================================================
+   1. AUDIO ENGINE
+   ============================================================ */
+const AudioEngine = (() => {
+  let ctx = null, enabled = true;
+  function ensureCtx(){
+    if(!ctx){
+      try{ ctx = new (window.AudioContext || window.webkitAudioContext)(); }catch(e){ ctx = null; }
+    }
+    if(ctx && ctx.state === 'suspended') ctx.resume();
+    return ctx;
+  }
+  function tone(freq, dur, type='sine', vol=0.18, when=0){
+    if(!enabled) return;
+    const ac = ensureCtx();
+    if(!ac) return;
+    const t0 = ac.currentTime + when;
+    const osc = ac.createOscillator();
+    const gain = ac.createGain();
+    osc.type = type; osc.frequency.setValueAtTime(freq, t0);
+    gain.gain.setValueAtTime(0.0001, t0);
+    gain.gain.exponentialRampToValueAtTime(vol, t0+0.015);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0+dur);
+    osc.connect(gain); gain.connect(ac.destination);
+    osc.start(t0); osc.stop(t0+dur+0.02);
+  }
+  return {
+    setEnabled(v){ enabled = v; },
+    click(){ tone(520, 0.09, 'triangle', 0.12); },
+    whirl(freq){ },
+    tension(){ tone(180, 0.28, 'sawtooth', 0.08); },
+    snap(){ tone(900, 0.05, 'square', 0.2); setTimeout(()=>tone(140,0.25,'sawtooth',0.15),40); },
+    success(){ tone(660,0.12,'sine',0.16); setTimeout(()=>tone(880,0.18,'sine',0.16),90); },
+    fail(){ tone(220,0.24,'sawtooth',0.14); },
+    discover(){ tone(500,0.1,'sine',0.14); setTimeout(()=>tone(750,0.1,'sine',0.14),80); setTimeout(()=>tone(1000,0.16,'sine',0.14),160); }
+  };
+})();
+
+/* ============================================================
+   2. WISPY — Interactions
+   ============================================================ */
+const wispyLines = {
+  idle: ["Ready?","Try changing the speed.","Watch the direction.","Look at the vectors."],
+  explore: ["Try changing the speed.","Notice how the string angle changes.","Heavier stone needs more force to turn."],
+  readyToSnap: ["Whenever you're ready... snap it!"],
+  snapped: ["The string broke! Drag an arrow from the stone to predict its path."],
+  predicted: ["Interesting guess. Let's find out."],
+  countdown: ["Here we go..."],
+  released: ["Watch closely!"],
+  pausedAfter: ["Look at the vectors. What do you notice?"],
+  tangent: ["The stone didn't fly directly away from the centre.","It continued in the direction it was already moving.","That direction was tangent to the circle."],
+  correct: ["Nice! You predicted it exactly."],
+  close: ["Close! Watch the tangent line carefully."],
+  broke: ["You broke the string! Let's see what happens."],
+  extreme: ["Whoa, that's a lot of force!"],
+};
+function wispySay(text){
+  const dock = $('#wispyDock');
+  if(dock) {
+    $('#wispyText').textContent = text;
+    dock.classList.add('talking');
+  }
+}
+function wispySayRandom(key){
+  const arr = wispyLines[key] || wispyLines.idle;
+  wispySay(arr[Math.floor(Math.random()*arr.length)]);
+}
+
+/* ============================================================
+   3. STATE MACHINE
+   ============================================================ */
+const STATE = {
+  INTRO:'INTRO', EXPLORE:'EXPLORE', SNAPPING:'SNAPPING', PREDICTION:'PREDICTION',
+  COUNTDOWN:'COUNTDOWN', RELEASE:'RELEASE', PAUSED_AFTER_RELEASE:'PAUSED_AFTER_RELEASE',
+  FLIGHT_DONE:'FLIGHT_DONE', TANGENT_REVEAL:'TANGENT_REVEAL', CONCEPT_REVEAL:'CONCEPT_REVEAL',
+  FORMULA_DISCOVERY:'FORMULA_DISCOVERY', CHALLENGE:'CHALLENGE', MISCONCEPTION:'MISCONCEPTION',
+  REALWORLD:'REALWORLD', SUMMARY:'SUMMARY'
+};
+let currentState = STATE.INTRO;
+
+/* ============================================================
+   4. EXPERIMENT DATA (localStorage)
+   ============================================================ */
+const STORE_KEY = 'wisdawn_whirling_stone_v1';
+function loadStats(){
+  try{ return JSON.parse(localStorage.getItem(STORE_KEY)) || defaultStats(); }
+  catch(e){ return defaultStats(); }
+}
+function defaultStats(){
+  return { attempts:0, predictions:0, correctPredictions:0, resets:0, challengesCompleted:0,
+           experimentsCompleted:0, discoveredTangent:false, discoveredVelocityRel:false, discoveredForceRel:false };
+}
+let stats = loadStats();
+function saveStats(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(stats)); }catch(e){} }
+
+/* ============================================================
+   5. PHYSICS ENGINE
+   ============================================================ */
+const Physics = {
+  mass: 1.0,        // kg
+  radius: 2.0,      // m
+  omega: 2.5,       // rad/s (angular velocity)
+  angle: 0,          // rad
+  stringIntact: true,
+  paused: false,
+
+  released:false,
+  relX:0, relY:0,      
+  relVX:0, relVY:0,    
+  flightT:0,           
+
+  v(){ return this.omega * this.radius; },                                  
+  Fc(){ const v=this.v(); return this.mass * v*v / this.radius; },          
+  ac(){ const v=this.v(); return v*v / this.radius; },                      
+
+  reset(){
+    this.angle = 0; this.stringIntact = true; this.paused = false;
+    this.released = false; this.flightT = 0;
+    this.relX=0; this.relY=0; this.relVX=0; this.relVY=0;
+  },
+
+  step(dt){
+    if(this.paused) return;
+    if(this.stringIntact && !this.released){
+      this.angle += this.omega * dt;
+      if(this.angle > Math.PI*2) this.angle -= Math.PI*2;
+    } else if(this.released){
+      this.flightT += dt;
+    }
+  },
+
+  attachedPos(){
+    return { x: Math.cos(this.angle)*this.radius, y: Math.sin(this.angle)*this.radius };
+  },
+  attachedVel(){
+    const v = this.v();
+    return { vx: -Math.sin(this.angle)*v, vy: Math.cos(this.angle)*v };
+  },
+  releaseNow(){
+    const p = this.attachedPos();
+    const vv = this.attachedVel();
+    this.relX = p.x; this.relY = p.y;
+    this.relVX = vv.vx; this.relVY = vv.vy;
+    this.released = true; this.stringIntact = false; this.flightT = 0;
+  },
+  flightPos(){
+    return { x: this.relX + this.relVX*this.flightT, y: this.relY + this.relVY*this.flightT };
+  }
+};
+
+/* ============================================================
+   6. RENDERER
+   ============================================================ */
+const canvas = $('#simCanvas');
+const ctx2d = canvas.getContext('2d');
+let DPR = Math.min(window.devicePixelRatio || 1, 2);
+let cw=0, ch=0;
+let PPM = 60;
+let showVectors = false;
+let trail = [];
+
+function resizeCanvas(){
+  const rect = canvas.getBoundingClientRect();
+  cw = Math.max(240, rect.width);
+  ch = Math.max(240, rect.height);
+  DPR = Math.min(window.devicePixelRatio || 1, 2);
+  canvas.width = Math.round(cw*DPR);
+  canvas.height = Math.round(ch*DPR);
+  ctx2d.setTransform(DPR,0,0,DPR,0,0);
+  const minSide = Math.min(cw, ch);
+  PPM = clamp((minSide*0.5) / 4.2, 24, 110);
+}
+window.addEventListener('resize', resizeCanvas);
+
+function centerPx(){ return { x: cw/2, y: ch/2 + (window.innerWidth<=880? -6 : 0) }; }
+function worldToPx(x,y){ const c = centerPx(); return { x: c.x + x*PPM, y: c.y + y*PPM }; }
+
+function drawArrow(x0,y0,x1,y1,color,width=3){
+  const ang = Math.atan2(y1-y0, x1-x0);
+  ctx2d.strokeStyle = color; ctx2d.lineWidth = width; ctx2d.lineCap='round';
+  ctx2d.beginPath(); ctx2d.moveTo(x0,y0); ctx2d.lineTo(x1,y1); ctx2d.stroke();
+  const headLen = 9+width;
+  ctx2d.beginPath();
+  ctx2d.moveTo(x1,y1);
+  ctx2d.lineTo(x1-headLen*Math.cos(ang-Math.PI/7), y1-headLen*Math.sin(ang-Math.PI/7));
+  ctx2d.lineTo(x1-headLen*Math.cos(ang+Math.PI/7), y1-headLen*Math.sin(ang+Math.PI/7));
+  ctx2d.closePath(); ctx2d.fillStyle = color; ctx2d.fill();
+}
+
+let tensionAnimT = 0;
+let showDottedOrbit = true;
+
+function render(){
+  ctx2d.clearRect(0,0,cw,ch);
+  const c = centerPx();
+
+  const grad = ctx2d.createRadialGradient(c.x,c.y,10,c.x,c.y, Math.min(cw,ch)*0.6);
+  grad.addColorStop(0,'rgba(124,58,237,0.10)');
+  grad.addColorStop(1,'rgba(124,58,237,0)');
+  ctx2d.fillStyle = grad; ctx2d.fillRect(0,0,cw,ch);
+
+  if(showDottedOrbit){
+    ctx2d.beginPath();
+    ctx2d.setLineDash([4,7]);
+    ctx2d.strokeStyle = 'rgba(139,92,246,0.35)';
+    ctx2d.lineWidth = 1.5;
+    ctx2d.arc(c.x, c.y, Physics.radius*PPM, 0, Math.PI*2);
+    ctx2d.stroke();
+    ctx2d.setLineDash([]);
+  }
+
+  ctx2d.beginPath();
+  ctx2d.fillStyle = '#5a4a2c';
+  ctx2d.ellipse(c.x, c.y, 12, 9, 0, 0, Math.PI*2);
+  ctx2d.fill();
+  ctx2d.beginPath();
+  ctx2d.fillStyle = '#7a6236';
+  ctx2d.ellipse(c.x-2, c.y-2, 6, 4.5, 0, 0, Math.PI*2);
+  ctx2d.fill();
+
+  let sx, sy;
+  if(!Physics.released){
+    const p = Physics.attachedPos();
+    sx = p.x; sy = p.y;
+  } else {
+    const p = Physics.flightPos();
+    sx = p.x; sy = p.y;
+  }
+  const spx = worldToPx(sx, sy);
+
+  if(Physics.stringIntact){
+    ctx2d.save();
+    let wobble = 0;
+    if(tensionAnimT>0 && tensionAnimT<1){
+      wobble = Math.sin(tensionAnimT*Math.PI*10) * (1-tensionAnimT) * 4;
+    }
+    const midx = (c.x+spx.x)/2 + wobble;
+    const midy = (c.y+spx.y)/2;
+    ctx2d.strokeStyle = tensionAnimT>0 ? '#f7c948' : 'rgba(220,210,255,0.85)';
+    ctx2d.lineWidth = 2 + tensionAnimT*2.5;
+    ctx2d.beginPath();
+    ctx2d.moveTo(c.x, c.y);
+    ctx2d.quadraticCurveTo(midx, midy, spx.x, spx.y);
+    ctx2d.stroke();
+    ctx2d.restore();
+  }
+
+  if(Physics.released){
+    trail.push({x:spx.x,y:spx.y});
+    if(trail.length>28) trail.shift();
+    for(let i=0;i<trail.length;i++){
+      const a = i/trail.length;
+      ctx2d.beginPath();
+      ctx2d.fillStyle = `rgba(192,132,252,${0.05+a*0.25})`;
+      ctx2d.arc(trail[i].x, trail[i].y, 3+a*3, 0, Math.PI*2);
+      ctx2d.fill();
+    }
+  } else {
+    trail.length = 0;
+  }
+
+  const stoneR = 9 + clamp(Physics.mass,0.2,3)*2.2;
+  const glowGrad = ctx2d.createRadialGradient(spx.x,spx.y,1,spx.x,spx.y,stoneR*2.6);
+  glowGrad.addColorStop(0,'rgba(192,132,252,0.9)');
+  glowGrad.addColorStop(1,'rgba(192,132,252,0)');
+  ctx2d.beginPath(); ctx2d.fillStyle = glowGrad; ctx2d.arc(spx.x,spx.y,stoneR*2.6,0,Math.PI*2); ctx2d.fill();
+  const stoneGrad = ctx2d.createRadialGradient(spx.x-stoneR*0.3,spx.y-stoneR*0.3,1,spx.x,spx.y,stoneR);
+  stoneGrad.addColorStop(0,'#f3e8ff'); stoneGrad.addColorStop(0.4,'#c084fc'); stoneGrad.addColorStop(1,'#7c3aed');
+  ctx2d.beginPath(); ctx2d.fillStyle = stoneGrad; ctx2d.arc(spx.x,spx.y,stoneR,0,Math.PI*2); ctx2d.fill();
+
+  if(showVectors){
+    let vx,vy,fx,fy;
+    if(!Physics.released){
+      const vv = Physics.attachedVel();
+      vx=vv.vx; vy=vv.vy;
+      const toC = { x: c.x - spx.x, y: c.y - spx.y };
+      const dist = Math.hypot(toC.x,toC.y) || 1;
+      fx = toC.x/dist; fy = toC.y/dist;
+    } else {
+      vx = Physics.relVX; vy = Physics.relVY;
+      fx = 0; fy = 0;
+    }
+    const vMag = Math.hypot(vx,vy);
+    if(vMag>0.001){
+      const vLenPx = clamp(vMag*10, 20, 90);
+      const ux = vx/vMag, uy = vy/vMag;
+      drawArrow(spx.x, spx.y, spx.x+ux*vLenPx, spx.y+uy*vLenPx, '#4da3ff', 3.5);
+    }
+    if(!Physics.released){
+      const fMagN = Physics.Fc();
+      const fLenPx = clamp(fMagN*3.2, 18, 80);
+      drawArrow(spx.x, spx.y, spx.x+fx*fLenPx, spx.y+fy*fLenPx, '#f4534a', 3.5);
+    }
+  }
+
+  if(Physics.released){
+    const rp = worldToPx(Physics.relX, Physics.relY);
+    ctx2d.beginPath();
+    ctx2d.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx2d.arc(rp.x, rp.y, 3.5, 0, Math.PI*2); ctx2d.fill();
+  }
+}
+
+/* ============================================================
+   7. MAIN LOOP
+   ============================================================ */
+const FIXED_DT = 1/120;
+let lastTime = null;
+let accumulator = 0;
+let simRunning = true;
+
+function frame(ts){
+  requestAnimationFrame(frame);
+  if(lastTime==null) lastTime = ts;
+  let delta = (ts - lastTime)/1000;
+  lastTime = ts;
+  delta = Math.min(delta, 0.05);
+
+  if(simRunning && !Physics.paused){
+    accumulator += delta;
+    let iterations = 0;
+    while(accumulator >= FIXED_DT && iterations < 8){
+      Physics.step(FIXED_DT);
+      accumulator -= FIXED_DT;
+      iterations++;
+    }
+  }
+
+  handleTimedTransitions(delta);
+  render();
+  updateLiveReadouts();
+}
+requestAnimationFrame(frame);
+
+/* ============================================================
+   8. UI BINDINGS
+   ============================================================ */
+function updateDashboardValues(){
+  const v = Physics.v(), Fc = Physics.Fc(), ac = Physics.ac();
+  if($('#dashMass')) $('#dashMass').textContent = fmt(Physics.mass,1)+' kg';
+  if($('#dashRadius')) $('#dashRadius').textContent = fmt(Physics.radius,1)+' m';
+  if($('#dashOmega')) $('#dashOmega').textContent = fmt(Physics.omega,1)+' rad/s';
+  if($('#dashVelocity')) $('#dashVelocity').textContent = fmt(v,1)+' m/s';
+  if($('#dashAccel')) $('#dashAccel').textContent = fmt(ac,1)+' m/s²';
+  if($('#dashForce')) $('#dashForce').textContent = fmt(Fc,1)+' N';
+
+  if($('#mVel')) $('#mVel').textContent = fmt(v,1)+' m/s';
+  if($('#mForce')) $('#mForce').textContent = fmt(Fc,1)+' N';
+  if($('#mRad')) $('#mRad').textContent = fmt(Physics.radius,1)+' m';
+  if($('#mMass')) $('#mMass').textContent = fmt(Physics.mass,1)+' kg';
+}
+
+function bindSliderPair(rangeId, rangeIdM, labelId, labelIdM, onChange, formatFn){
+  const el = $(rangeId), elM = $(rangeIdM);
+  const lbl = $(labelId), lblM = $(labelIdM);
+  function apply(val, source){
+    const v = parseFloat(val);
+    onChange(v);
+    if(lbl) lbl.textContent = formatFn(v);
+    if(lblM) lblM.textContent = formatFn(v);
+    if(source!==el && el) el.value = v;
+    if(source!==elM && elM) elM.value = v;
+    updateDashboardValues();
+    checkDiscoveries();
+  }
+  el?.addEventListener('input', e=>apply(e.target.value, el));
+  elM?.addEventListener('input', e=>apply(e.target.value, elM));
+}
+bindSliderPair('#omegaSlider','#omegaSliderM','#omegaLabel','#omegaLabelM', v=>Physics.omega=v, v=>fmt(v,1)+' rad/s');
+bindSliderPair('#radiusSlider','#radiusSliderM','#radiusLabel','#radiusLabelM', v=>Physics.radius=v, v=>fmt(v,1)+' m');
+bindSliderPair('#massSlider','#massSliderM','#massLabel','#massLabelM', v=>Physics.mass=v, v=>fmt(v,1)+' kg');
+
+let baselineFc = Physics.Fc();
+function checkDiscoveries(){
+  const Fc = Physics.Fc();
+  if(Math.abs(Fc-baselineFc) > 2) { stats.discoveredForceRel = true; }
+}
+
+function updateLiveReadouts(){
+  if(currentState===STATE.EXPLORE){
+    const pct = clamp(40 + Physics.Fc()*2.2, 15, 100);
+    if($('#tensionFill')) $('#tensionFill').style.width = pct+'%';
+    if($('#tensionPct')) $('#tensionPct').textContent = Math.round(pct)+'%';
+  }
+  if(currentState===STATE.RELEASE || currentState===STATE.PAUSED_AFTER_RELEASE || currentState===STATE.FLIGHT_DONE){
+    const v = Math.hypot(Physics.relVX, Physics.relVY);
+    const dist = v*Physics.flightT;
+    if($('#statTime')) $('#statTime').textContent = fmt(Physics.flightT,2)+' s';
+    if($('#statSpeed')) $('#statSpeed').textContent = fmt(v,1)+' m/s';
+    if($('#statDist')) $('#statDist').textContent = fmt(dist,1)+' m';
+  }
+}
+
+/* ============================================================
+   9. VIEW BUTTONS / VECTOR TOGGLES
+   ============================================================ */
+$$('.view-btn[data-view]').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    $$('.view-btn[data-view]').forEach(b=>b.setAttribute('aria-pressed','false'));
+    btn.setAttribute('aria-pressed','true');
+    AudioEngine.click();
+    canvas.style.transform = btn.dataset.view==='side' ? 'perspective(700px) rotateX(18deg)' : 'none';
+  });
+});
+function setVectors(on){
+  showVectors = on;
+  $('#vectorToggleBtn')?.setAttribute('aria-pressed', on?'true':'false');
+  if($('#vectorToggleBtn')) $('#vectorToggleBtn').style.color = on? 'var(--gold)':'';
+}
+$('#vectorToggleBtn')?.addEventListener('click', ()=>{ AudioEngine.click(); setVectors(!showVectors); });
+$('#vectorToggleM')?.addEventListener('click', ()=>{ AudioEngine.click(); setVectors(!showVectors); });
+$('#vectorToggleMenu')?.addEventListener('click', (e)=>{
+  const on = !e.target.classList.contains('on');
+  e.target.classList.toggle('on', on);
+  setVectors(on);
+});
+
+/* ============================================================
+   10. MENU / SOUND / MOTION TOGGLES
+   ============================================================ */
+const menuBtn = $('#menuBtn'), menuPanel = $('#menuPanel');
+menuBtn?.addEventListener('click', ()=>{
+  const open = !menuPanel.classList.contains('open');
+  menuPanel.classList.toggle('open', open);
+  menuBtn.setAttribute('aria-expanded', open?'true':'false');
+});
+document.addEventListener('click', (e)=>{
+  if(menuPanel && menuBtn && !menuPanel.contains(e.target) && e.target!==menuBtn && menuPanel.classList.contains('open')){
+    menuPanel.classList.remove('open');
+  }
+});
+const soundToggle = $('#soundToggle');
+soundToggle?.addEventListener('click', ()=>{
+  const on = !soundToggle.classList.contains('on');
+  soundToggle.classList.toggle('on', on);
+  AudioEngine.setEnabled(on);
+});
+const motionToggle = $('#motionToggle');
+function setReducedMotion(on){
+  document.body.classList.toggle('reduced-motion', on);
+  if(motionToggle) motionToggle.classList.toggle('on', on);
+}
+motionToggle?.addEventListener('click', ()=> setReducedMotion(!document.body.classList.contains('reduced-motion')));
+if(prefersReduced) setReducedMotion(true);
+
+$('#backBtn')?.addEventListener('click', ()=>{
+  toast('This is a standalone preview — “Back” would return to the Wisdawn chapter map.');
+});
+
+/* ============================================================
+   11. SCENE / STATE TRANSITIONS
+   ============================================================ */
+function hideAllOverlays(){
+  ['#topLeftMessage','#observeCallout','#statsCard','#predictionResultCard','#afterReleasePanel', '#confirmBtnWrap']
+    .forEach(sel=> { if($(sel)) $(sel).classList.remove('show'); });
+  if($('#statsCard')) $('#statsCard').style.display='none';
+  if($('#introScreen')) $('#introScreen').style.display='none';
+  if($('#confirmBtnWrap')) $('#confirmBtnWrap').style.display='none';
+  $$('.full-scene').forEach(s=>s.classList.remove('show'));
+}
+
+function setState(next){
+  currentState = next;
+  hideAllOverlays();
+  const wispyDock = $('#wispyDock');
+  
+  // Default restore all background UI
+  if(wispyDock) wispyDock.style.display = 'flex';
+  if($('#dockLeft')) $('#dockLeft').style.display='flex'; 
+  if($('#dockRight')) $('#dockRight').style.display='flex';
+  if($('#controlBar')) $('#controlBar').style.display='flex'; 
+  if($('#mobileSheet')) $('#mobileSheet').style.display='flex';
+  if($('#snapBtnWrap')) $('#snapBtnWrap').style.display='none';
+  if($('#snapBtnWrapM')) $('#snapBtnWrapM').innerHTML='';
+  showDottedOrbit = true;
+
+  switch(next){
+    case STATE.INTRO:
+      if($('#introScreen')) $('#introScreen').style.display='flex';
+      // Explicitly hide background UI completely to prevent layout bleeding
+      if($('#dockLeft')) $('#dockLeft').style.display='none';
+      if($('#dockRight')) $('#dockRight').style.display='none';
+      if($('#controlBar')) $('#controlBar').style.display='none';
+      if($('#mobileSheet')) $('#mobileSheet').style.display='none';
+      if(wispyDock) wispyDock.style.display='none';
+      break;
+
+    case STATE.EXPLORE:
+      Physics.stringIntact = true; Physics.released=false; Physics.paused=false;
+      if($('#snapBtnWrap')) $('#snapBtnWrap').style.display='flex';
+      if($('#tensionWrap')) $('#tensionWrap').style.display='block';
+      if($('#snapBtnWrapM')) {
+        $('#snapBtnWrapM').innerHTML = '<button id="snapBtnM" class="btn" style="background:linear-gradient(180deg,var(--red),var(--red-deep));color:#fff;border-radius:999px;padding:12px 22px;font-weight:900;">🔴 SNAP</button>';
+        $('#snapBtnM')?.addEventListener('click', triggerSnap);
+      }
+      wispySayRandom('explore');
+      break;
+
+    case STATE.SNAPPING:
+      if($('#tensionWrap')) $('#tensionWrap').style.display='block';
+      break;
+
+    case STATE.PREDICTION:
+      if($('#tensionWrap')) $('#tensionWrap').style.display='none';
+      if($('#confirmBtnWrap')) $('#confirmBtnWrap').style.display='block';
+      wispySayRandom('snapped');
+      break;
+
+    case STATE.COUNTDOWN:
+      break;
+
+    case STATE.RELEASE:
+      if($('#statsCard')) {
+        $('#statsCard').style.display='flex';
+        $('#statsCard').classList.add('show');
+      }
+      break;
+
+    case STATE.PAUSED_AFTER_RELEASE:
+      if($('#observeCallout')) $('#observeCallout').classList.add('show');
+      if($('#statsCard')) {
+        $('#statsCard').style.display='flex'; 
+        $('#statsCard').classList.add('show');
+      }
+      showVectors = true; setVectors(true);
+      wispySayRandom('pausedAfter');
+      break;
+
+    case STATE.FLIGHT_DONE:
+      if($('#afterReleasePanel')) $('#afterReleasePanel').classList.add('show');
+      if($('#statsCard')) {
+        $('#statsCard').style.display='flex'; 
+        $('#statsCard').classList.add('show');
+      }
+      break;
+    
+    case STATE.CONCEPT_REVEAL:
+    case STATE.FORMULA_DISCOVERY:
+    case STATE.CHALLENGE:
+    case STATE.MISCONCEPTION:
+    case STATE.REALWORLD:
+    case STATE.SUMMARY:
+      if($('#dockLeft')) $('#dockLeft').style.display='none'; 
+      if($('#dockRight')) $('#dockRight').style.display='none';
+      if($('#controlBar')) $('#controlBar').style.display='none'; 
+      if($('#mobileSheet')) $('#mobileSheet').style.display='none';
+      if(wispyDock) wispyDock.style.display='none';
+      
+      if(next===STATE.CONCEPT_REVEAL && $('#conceptScene')) $('#conceptScene').classList.add('show');
+      if(next===STATE.FORMULA_DISCOVERY && $('#formulaScene')) $('#formulaScene').classList.add('show');
+      if(next===STATE.CHALLENGE && $('#challengeScene')) $('#challengeScene').classList.add('show');
+      if(next===STATE.MISCONCEPTION && $('#misconceptionScene')) $('#misconceptionScene').classList.add('show');
+      if(next===STATE.REALWORLD && $('#realworldScene')) $('#realworldScene').classList.add('show');
+      if(next===STATE.SUMMARY && $('#summaryScene')) {
+        $('#summaryScene').classList.add('show');
+        stats.experimentsCompleted += 1; saveStats();
+        updateNavCompletion();
+      }
+      if(next===STATE.FORMULA_DISCOVERY) resetFormulaDemo();
+      if(next===STATE.CHALLENGE) initChallenges();
+      if(next===STATE.MISCONCEPTION) resetMisconception();
+      break;
+  }
+}
+function goTo(next){ setState(next); }
+
+/* ============================================================
+   12. SNAP STRING SEQUENCE
+   ============================================================ */
+function triggerSnap(){
+  if(currentState!==STATE.EXPLORE) return;
+  AudioEngine.tension();
+  goTo(STATE.SNAPPING);
+  Physics.paused = true;
+  let t0 = performance.now();
+  const dur = 320;
+  function anim(now){
+    const t = clamp((now-t0)/dur, 0, 1);
+    tensionAnimT = t;
+    if(t<1){ requestAnimationFrame(anim); }
+    else{
+      tensionAnimT = 0;
+      Physics.releaseNow();     
+      Physics.stringIntact = false;
+      AudioEngine.snap();
+      Physics.paused = true;     
+      stats.attempts += 1; saveStats();
+      goTo(STATE.PREDICTION);
+      setupPredictionDrag();
+    }
+  }
+  requestAnimationFrame(anim);
+}
+$('#snapBtn')?.addEventListener('click', triggerSnap);
+
+/* ============================================================
+   13. PREDICTION
+   ============================================================ */
+let predicting = false, predVec = null, dragStart=null;
+function stonePixelPos(){
+  const c = centerPx();
+  return worldToPx(Physics.relX, Physics.relY);
+}
+function setupPredictionDrag(){
+  predicting = true; predVec = null;
+}
+function pointerPosFromEvent(e){
+  const rect = canvas.getBoundingClientRect();
+  const cx = (e.touches? e.touches[0].clientX : e.clientX) - rect.left;
+  const cy = (e.touches? e.touches[0].clientY : e.clientY) - rect.top;
+  return {x:cx, y:cy};
+}
+canvas.addEventListener('pointerdown', (e)=>{
+  if(currentState!==STATE.PREDICTION) return;
+  const sp = stonePixelPos();
+  const p = pointerPosFromEvent(e);
+  if(Math.hypot(p.x-sp.x, p.y-sp.y) < 60){
+    dragStart = sp;
+    canvas.setPointerCapture(e.pointerId);
+  }
+});
+canvas.addEventListener('pointermove', (e)=>{
+  if(currentState!==STATE.PREDICTION || !dragStart) return;
+  const p = pointerPosFromEvent(e);
+  predVec = { x: p.x-dragStart.x, y: p.y-dragStart.y };
+  drawPredictionOverlay();
+});
+function endDrag(){
+  if(currentState!==STATE.PREDICTION || !dragStart) return;
+  dragStart = null;
+  if(predVec && Math.hypot(predVec.x,predVec.y) > 12){
+    if($('#predictionResultCard')) $('#predictionResultCard').classList.add('show');
+    updatePredictionPreviewSVG();
+    stats.predictions += 1; saveStats();
+  }
+}
+canvas.addEventListener('pointerup', endDrag);
+canvas.addEventListener('pointercancel', endDrag);
+
+function drawPredictionOverlay(){}
+
+const baseRender = render;
+render = function(){
+  baseRender();
+  if(currentState===STATE.PREDICTION && dragStart && predVec){
+    const x0=dragStart.x, y0=dragStart.y;
+    drawArrow(x0,y0, x0+predVec.x, y0+predVec.y, '#f7c948', 3.5);
+  }
+  if(currentState===STATE.PREDICTION && !dragStart && predVec){
+    const sp = stonePixelPos();
+    drawArrow(sp.x, sp.y, sp.x+predVec.x, sp.y+predVec.y, 'rgba(247,201,72,0.85)', 3);
+  }
+};
+
+function updatePredictionPreviewSVG(){
+  if(!predVec) return;
+  const svg = $('#predArrowPreview');
+  if(!svg) return;
+  const ang = Math.atan2(predVec.y, predVec.x);
+  const len = 46;
+  const x1=15,y1=20;
+  const x2 = x1+Math.cos(ang)*len, y2 = y1+Math.sin(ang)*len;
+  svg.innerHTML = `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#f7c948" stroke-width="3" stroke-dasharray="5 4" stroke-linecap="round"/>`;
+}
+
+$('#confirmPredictionBtn')?.addEventListener('click', ()=>{
+  if(!predVec) {
+    wispySay("Draw an arrow starting from the stone first! Where will it go?");
+    return;
+  }
+  AudioEngine.click();
+  const actualAng = Math.atan2(Physics.relVY, Physics.relVX);
+  const predAng = Math.atan2(predVec.y, predVec.x);
+  let diff = Math.abs(actualAng - predAng);
+  diff = Math.min(diff, Math.PI*2-diff);
+  window.__predictionAccuracy = diff < (Math.PI/6);
+  wispySayRandom('predicted');
+  runCountdownThenRelease();
+});
+
+/* ============================================================
+   14. COUNTDOWN → RELEASE
+   ============================================================ */
+let flightAutoPauseArmed = false;
+
+function runCountdownThenRelease(){
+  goTo(STATE.COUNTDOWN);
+  const overlay = $('#countdownOverlay'), num = $('#countdownNum');
+  if(overlay) overlay.classList.add('show');
+  let n = 3;
+  if(num) num.textContent = n;
+  const iv = setInterval(()=>{
+    n--;
+    if(n>0){ 
+      if(num) {
+        num.textContent = n; 
+        num.style.animation='none'; 
+        void num.offsetWidth; 
+        num.style.animation='countPop .55s ease-out'; 
+      }
+    }
+    else{
+      clearInterval(iv);
+      if(overlay) overlay.classList.remove('show');
+      Physics.paused = false; 
+      trail.length = 0;
+      flightAutoPauseArmed = true; 
+      goTo(STATE.RELEASE);
+    }
+  }, prefersReduced? 260 : 700);
+}
+
+function handleTimedTransitions(){
+  // Auto-pause once when flight time crosses threshold
+  if(currentState===STATE.RELEASE && flightAutoPauseArmed){
+    if(Physics.flightT >= (prefersReduced?0.35:0.7)){
+      Physics.paused = true;
+      flightAutoPauseArmed = false; // Prevents the infinite re-pausing bug!
+      goTo(STATE.PAUSED_AFTER_RELEASE);
+    }
+  }
+}
+
+$('#resumeBtn')?.addEventListener('click', ()=>{
+  AudioEngine.click();
+  Physics.paused = false;
+  currentState = STATE.RELEASE;
+  hideAllOverlays();
+  if($('#statsCard')) {
+    $('#statsCard').style.display='flex'; 
+    $('#statsCard').classList.add('show');
+  }
+  monitorFlightCompletion();
+});
+
+$('#stepBtn')?.addEventListener('click', ()=>{
+  AudioEngine.click();
+  Physics.step(0.08); // Fixed advance
+  render();
+  updateLiveReadouts();
+  
+  // Checking bounds during manual step
+  const pos = Physics.flightPos();
+  const outOfBounds = Math.abs(pos.x) > 9 || Math.abs(pos.y) > 9;
+  const timeUp = Physics.flightT > 4.5;
+  if(outOfBounds || timeUp){
+    goTo(STATE.FLIGHT_DONE);
+    if (window.__predictionAccuracy) {
+      wispySay("Awesome! You correctly predicted the path. The stone moved in a straight line along the tangent.");
+    } else {
+      wispySay("Oops, not quite! The stone actually moved in a straight line along the tangent to the circle.");
+    }
+  }
+});
+
+$('#resetBtnObserve')?.addEventListener('click', doFullReset);
+$('#playAgainBtn')?.addEventListener('click', ()=>{
+  AudioEngine.click();
+  Physics.reset();
+  goTo(STATE.EXPLORE);
+});
+
+// Instant jump to concepts to avoid freezing illusion
+$('#continueToTangentBtn')?.addEventListener('click', ()=> {
+  AudioEngine.click();
+  goTo(STATE.CONCEPT_REVEAL);
+});
+
+function monitorFlightCompletion(){
+  const check = ()=>{
+    const pos = Physics.flightPos();
+    const outOfBounds = Math.abs(pos.x) > 9 || Math.abs(pos.y) > 9;
+    const timeUp = Physics.flightT > 4.5;
+    if(outOfBounds || timeUp){
+      Physics.paused = true;
+      goTo(STATE.FLIGHT_DONE);
+      
+      if (window.__predictionAccuracy) {
+        wispySay("Awesome! You correctly predicted the path. The stone moved in a straight line along the tangent.");
+      } else {
+        wispySay("Oops, not quite! The stone actually moved in a straight line along the tangent to the circle.");
+      }
+      return;
+    }
+    if(currentState===STATE.RELEASE) requestAnimationFrame(check);
+  };
+  requestAnimationFrame(check);
+}
+
+function doFullReset(){
+  AudioEngine.click();
+  stats.resets += 1; saveStats();
+  Physics.reset();
+  predVec = null; dragStart=null;
+  flightAutoPauseArmed = false;
+  goTo(STATE.EXPLORE);
+}
+
+/* ============================================================
+   15. CONCEPT / FORMULA DISCOVERY
+   ============================================================ */
+$('#toFormulaBtn')?.addEventListener('click', ()=>{ AudioEngine.click(); goTo(STATE.FORMULA_DISCOVERY); });
+
+function resetFormulaDemo(){
+  baselineFc = Physics.Fc();
+  if($('#formulaBefore')) $('#formulaBefore').textContent = fmt(baselineFc,1);
+  if($('#formulaAfter')) $('#formulaAfter').textContent = '—';
+  $$('.formula-box .term').forEach(t=>t.classList.remove('active'));
+}
+function highlightTerm(letter){
+  $$('.formula-box .term').forEach(t=>t.classList.toggle('active', t.dataset.term===letter));
+}
+$$('.formula-box .term').forEach(t=>{
+  t.addEventListener('click', ()=> highlightTerm(t.dataset.term));
+  t.addEventListener('keydown', (e)=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); highlightTerm(t.dataset.term);} });
+});
+function formulaDemo(kind){
+  const before = Physics.Fc();
+  if($('#formulaBefore')) $('#formulaBefore').textContent = fmt(before,1);
+  if(kind==='speed'){ Physics.omega *= 2; highlightTerm('v'); }
+  if(kind==='radius'){ Physics.radius *= 2; highlightTerm('r'); }
+  if(kind==='mass'){ Physics.mass = clamp(Physics.mass*2,0.2,3); highlightTerm('m'); }
+  const after = Physics.Fc();
+  if($('#formulaAfter')) $('#formulaAfter').textContent = fmt(after,1);
+  const ratio = (after/before).toFixed(2);
+  const explainEl = $('#formulaExplainText');
+  if(explainEl) {
+    if(kind==='speed') explainEl.innerHTML = `Doubling <b style="color:var(--blue-vec)">speed</b> made the force <b>${ratio}×</b> larger — because v is <i>squared</i> in the formula.`;
+    if(kind==='radius') explainEl.innerHTML = `Doubling <b style="color:var(--red)">radius</b> made the force <b>${ratio}×</b> — radius sits on the bottom of the fraction, so a bigger circle needs less force at the same speed.`;
+    if(kind==='mass') explainEl.innerHTML = `Doubling <b style="color:var(--green-vec)">mass</b> made the force <b>${ratio}×</b> — force scales directly with mass.`;
+  }
+  AudioEngine.discover();
+  updateDashboardValues();
+  syncAllSliders();
+  stats.discoveredForceRel = true; stats.discoveredVelocityRel = true; saveStats();
+}
+$('#formulaDoubleSpeedBtn')?.addEventListener('click', ()=>formulaDemo('speed'));
+$('#formulaDoubleRadiusBtn')?.addEventListener('click', ()=>formulaDemo('radius'));
+$('#formulaDoubleMassBtn')?.addEventListener('click', ()=>formulaDemo('mass'));
+function syncAllSliders(){
+  if($('#omegaSlider')) $('#omegaSlider').value = Physics.omega; 
+  if($('#omegaSliderM')) $('#omegaSliderM').value = Physics.omega;
+  if($('#radiusSlider')) $('#radiusSlider').value = Physics.radius; 
+  if($('#radiusSliderM')) $('#radiusSliderM').value = Physics.radius;
+  if($('#massSlider')) $('#massSlider').value = Physics.mass; 
+  if($('#massSliderM')) $('#massSliderM').value = Physics.mass;
+  if($('#omegaLabel')) $('#omegaLabel').textContent = fmt(Physics.omega,1)+' rad/s'; 
+  if($('#omegaLabelM')) $('#omegaLabelM').textContent = fmt(Physics.omega,1)+' rad/s';
+  if($('#radiusLabel')) $('#radiusLabel').textContent = fmt(Physics.radius,1)+' m'; 
+  if($('#radiusLabelM')) $('#radiusLabelM').textContent = fmt(Physics.radius,1)+' m';
+  if($('#massLabel')) $('#massLabel').textContent = fmt(Physics.mass,1)+' kg'; 
+  if($('#massLabelM')) $('#massLabelM').textContent = fmt(Physics.mass,1)+' kg';
+  Physics.omega = clamp(Physics.omega,1,9); Physics.radius = clamp(Physics.radius,0.6,3.6); Physics.mass = clamp(Physics.mass,0.2,3);
+}
+$('#toChallengeBtn')?.addEventListener('click', ()=>{ AudioEngine.click(); goTo(STATE.CHALLENGE); });
+
+/* ============================================================
+   16. MINI CHALLENGES
+   ============================================================ */
+const challenges = [
+  { id:1, goal:'Make the centripetal force at least 4× larger — without changing the mass.',
+    baseFc:0, check(){ return Physics.Fc() >= this.baseFc*3.9 && Physics.mass===this._baseMass; }, done:false },
+  { id:2, goal:'Make the required force about half as large, while keeping speed (ω) the same.',
+    baseFc:0, check(){ return Physics.Fc() <= this.baseFc*0.58 && Physics.Fc() >= this.baseFc*0.42 && Math.abs(Physics.omega-this._baseOmega)<0.05; }, done:false },
+  { id:3, goal:'Increase the speed and watch what happens to the force — any increase counts!',
+    baseFc:0, check(){ return Physics.Fc() > this.baseFc*1.15; }, done:false }
+];
+function initChallenges(){
+  Physics.omega = 2.5; Physics.radius = 2.0;
+  challenges.forEach(c=>{ c.baseFc = Physics.mass*Physics.omega*Physics.omega*Physics.radius; c._baseMass=Physics.mass; c._baseOmega=Physics.omega; c.done=false; });
+  syncChallengeSliders();
+  renderChallengeList();
+}
+function syncChallengeSliders(){
+  if($('#chOmegaSlider')) $('#chOmegaSlider').value = Physics.omega; 
+  if($('#chOmegaLabel')) $('#chOmegaLabel').textContent = fmt(Physics.omega,1)+' rad/s';
+  if($('#chRadiusSlider')) $('#chRadiusSlider').value = Physics.radius; 
+  if($('#chRadiusLabel')) $('#chRadiusLabel').textContent = fmt(Physics.radius,1)+' m';
+  if($('#chForceLive')) $('#chForceLive').textContent = fmt(Physics.Fc(),1)+' N';
+}
+$('#chOmegaSlider')?.addEventListener('input', e=>{ Physics.omega = parseFloat(e.target.value); if($('#chOmegaLabel')) $('#chOmegaLabel').textContent = fmt(Physics.omega,1)+' rad/s'; if($('#chForceLive')) $('#chForceLive').textContent = fmt(Physics.Fc(),1)+' N'; evalChallenges(); updateDashboardValues(); });
+$('#chRadiusSlider')?.addEventListener('input', e=>{ Physics.radius = parseFloat(e.target.value); if($('#chRadiusLabel')) $('#chRadiusLabel').textContent = fmt(Physics.radius,1)+' m'; if($('#chForceLive')) $('#chForceLive').textContent = fmt(Physics.Fc(),1)+' N'; evalChallenges(); updateDashboardValues(); });
+
+function renderChallengeList(){
+  const wrap = $('#challengeList');
+  if(!wrap) return;
+  wrap.innerHTML = challenges.map(c=>`
+    <div class="challenge-card ${c.done?'done':''}" id="challenge-${c.id}">
+      <div class="challenge-goal">Challenge ${c.id}: ${c.goal}</div>
+      <div class="challenge-status ${c.done?'ok':''}">${c.done?'✓ Solved!':'Not yet solved'}</div>
+    </div>`).join('');
+}
+function evalChallenges(){
+  let changed=false;
+  challenges.forEach(c=>{
+    if(!c.done && c.check()){
+      c.done = true; changed = true;
+      stats.challengesCompleted += 1; saveStats();
+      AudioEngine.success();
+      wispySay('Nice work — challenge solved!');
+    }
+  });
+  if(changed) renderChallengeList();
+}
+$('#toMisconceptionBtn')?.addEventListener('click', ()=>{ AudioEngine.click(); goTo(STATE.MISCONCEPTION); });
+
+/* ============================================================
+   17. MISCONCEPTION TEST
+   ============================================================ */
+function resetMisconception(){
+  if($('#misconceptionFeedback')) $('#misconceptionFeedback').style.display='none';
+  if($('#toRealworldBtn')) $('#toRealworldBtn').disabled = true;
+  $$('#misconceptionChoices .choice-btn').forEach(b=>{ b.classList.remove('correct','wrong'); b.disabled=false; });
+}
+$$('#misconceptionChoices .choice-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const correct = btn.dataset.correct==='true';
+    $$('#misconceptionChoices .choice-btn').forEach(b=>b.disabled=true);
+    if(correct){
+      btn.classList.add('correct');
+      AudioEngine.success();
+      if($('#misconceptionWispyText')) $('#misconceptionWispyText').textContent = "Exactly right! There's no outward force — the stone simply keeps its existing velocity. That's inertia.";
+    } else {
+      btn.classList.add('wrong');
+      $$('#misconceptionChoices .choice-btn').forEach(b=>{ if(b.dataset.correct==='true') b.classList.add('correct'); });
+      AudioEngine.fail();
+      if($('#misconceptionWispyText')) $('#misconceptionWispyText').textContent = "It looks like something is pushing it outward, doesn't it? Let's inspect the forces — Centripetal force = 0 the instant the string breaks. No outward force is needed.";
+    }
+    if($('#misconceptionFeedback')) $('#misconceptionFeedback').style.display='block';
+    if($('#toRealworldBtn')) $('#toRealworldBtn').disabled = false;
+  });
+});
+$('#toRealworldBtn')?.addEventListener('click', ()=>{ AudioEngine.click(); goTo(STATE.REALWORLD); });
+
+/* ============================================================
+   18. REAL WORLD CONNECTIONS
+   ============================================================ */
+$$('#realworldGrid .rw-card').forEach(card=>{
+  card.addEventListener('click', ()=>{
+    if(card.classList.contains('revealed')) return;
+    card.classList.add('revealed');
+    if(card.querySelector('.source')) card.querySelector('.source').textContent = card.dataset.source;
+    AudioEngine.discover();
+  });
+});
+$('#toSummaryBtn')?.addEventListener('click', ()=>{ AudioEngine.click(); goTo(STATE.SUMMARY); });
+
+/* ============================================================
+   19. SUMMARY actions
+   ============================================================ */
+$('#exploreMoreBtn')?.addEventListener('click', ()=>{ AudioEngine.click(); Physics.reset(); goTo(STATE.EXPLORE); });
+$('#nextExperimentBtn')?.addEventListener('click', ()=>{ toast('More Gravitation experiments are coming soon to Wisdawn!'); });
+
+/* ============================================================
+   20. START / INTRO
+   ============================================================ */
+$('#startBtn')?.addEventListener('click', ()=>{
+  AudioEngine.click();
+  Physics.reset();
+  goTo(STATE.EXPLORE);
+});
+
+/* ============================================================
+   21. BOTTOM NAVIGATION
+   ============================================================ */
+const navItems = [
+  {id:'home', label:'HOME', icon:'🏠', home:true},
+  {id:1, label:'01 — WHY GRAVITY?', icon:'🌍'},
+  {id:2, label:'02 — BUILD A PLANET', icon:'🪐'},
+  {id:3, label:'03 — WHIRLING STONE', icon:'🪨', current:true},
+  {id:4, label:'04 — JUMP ON MOON', icon:'🌙'},
+  {id:5, label:'05 — GREAT DROP', icon:'🪶'},
+  {id:6, label:'06 — GRAVITY TOWER', icon:'🗼'},
+  {id:7, label:'07 — ESCAPE EARTH', icon:'🚀'},
+  {id:8, label:'08 — FALLING ELEVATOR', icon:'🏢'},
+  {id:9, label:'09 — MASS OR WEIGHT?', icon:'⚖️'},
+  {id:10, label:'10 — GRAVITY LAB', icon:'🧪'},
+];
+function renderNav(){
+  const bar = $('#navBar');
+  if(!bar) return;
+  bar.innerHTML = navItems.map(n=>`
+    <div class="nav-item ${n.current?'current':''} ${n.home?'home':''}" data-id="${n.id}" tabindex="0" role="button" aria-label="${n.label}">
+      <div class="nav-circle">${n.icon}</div>
+      <div class="nav-label">${n.label}</div>
+    </div>`).join('');
+  $$('.nav-item', bar).forEach(el=>{
+    el.addEventListener('click', ()=>{
+      if(el.classList.contains('current')){ return; }
+      if(el.classList.contains('home')){ toast('Returning to the Gravitation chapter map...'); return; }
+      toast("This experiment isn't built yet in this preview — stay tuned!");
+    });
+  });
+}
+function updateNavCompletion(){ }
+renderNav();
+
+/* ============================================================
+   22. STARFIELD BACKDROP
+   ============================================================ */
+(function starfield(){
+  const c = $('#stars');
+  if(!c) return;
+  const sctx = c.getContext('2d');
+  let stars = [];
+  function resize(){
+    c.width = window.innerWidth; c.height = window.innerHeight;
+    stars = [];
+    const n = Math.round((c.width*c.height)/9000);
+    for(let i=0;i<n;i++){
+      stars.push({x:Math.random()*c.width, y:Math.random()*c.height, r:Math.random()*1.3+0.2, a:Math.random()*0.6+0.15, tw:Math.random()*0.02+0.005});
+    }
+  }
+  window.addEventListener('resize', resize);
+  resize();
+  let phase=0;
+  function draw(){
+    requestAnimationFrame(draw);
+    if(prefersReduced){ }
+    phase += 0.016;
+    sctx.clearRect(0,0,c.width,c.height);
+    for(const s of stars){
+      const tw = prefersReduced ? s.a : s.a + Math.sin(phase*s.tw*60)*0.15;
+      sctx.beginPath();
+      sctx.fillStyle = `rgba(255,255,255,${clamp(tw,0,1)})`;
+      sctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+      sctx.fill();
+    }
+  }
+  requestAnimationFrame(draw);
+})();
+
+/* ============================================================
+   23. INITIAL SETUP
+   ============================================================ */
+function initialResize(){
+  resizeCanvas();
+  updateDashboardValues();
+}
+window.addEventListener('load', initialResize);
+setTimeout(initialResize, 0);
+setState(STATE.INTRO);
+
+if(canvas) canvas.tabIndex = -1;
+
+})();
+</script>
+</body>
+</html>
